@@ -1117,7 +1117,8 @@
         "gates": "published",
         "hotlaps": "estimated",
         "race": "published"
-      }
+      },
+      "result": "rainout"
     },
     {
       "date": "2026-08-08",
@@ -1266,7 +1267,7 @@
     {
       "date": "2026-09-04",
       "track": "AS",
-      "title": "Autism Acceptance Race — Pro Stocks $10,000 to win",
+      "title": "5th Annual Pro Stock Autism Awareness Event / SCoNE Sprints (rescheduled) / all divisions incl. 4 Cylinders",
       "type": "race",
       "times": {
         "pits": "15:00",
