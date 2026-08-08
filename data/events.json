@@ -7,6 +7,7 @@
       "short": "Albany-Saratoga",
       "lat": 42.98794,
       "lon": -73.78403,
+      "mrp": 3084,
       "defaults": {
         "pits": "15:00",
         "gates": "17:00",
@@ -20,6 +21,7 @@
       "short": "Lebanon Valley",
       "lat": 42.49054,
       "lon": -73.48698,
+      "mrp": 1837,
       "defaults": {
         "pits": "14:00",
         "gates": "15:00",
@@ -33,6 +35,7 @@
       "short": "Fonda",
       "lat": 42.95252,
       "lon": -74.36631,
+      "mrp": 1549,
       "defaults": {
         "pits": "16:00",
         "gates": "16:00",
@@ -1117,8 +1120,7 @@
         "gates": "published",
         "hotlaps": "estimated",
         "race": "published"
-      },
-      "result": "rainout"
+      }
     },
     {
       "date": "2026-08-08",
