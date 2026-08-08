@@ -1,21 +1,23 @@
 name: Track status
 
-# Three passes a day: 8am, noon and 2pm Eastern. The morning read sets
-# expectations, noon catches weather moving in, and 2pm is the one that
-# decides the night.
+# Hourly from 8am to 5pm Eastern so a flag change gets caught close to when
+# it happens, with a dedicated 2pm pass that always sends a roll-up of
+# tonight's tracks whether anything changed or not. The 3–5pm passes cover
+# the stretch between that summary and rolling out — Lebanon Valley's hot
+# laps are at 5, so 5pm is the last run that can still change your mind.
 #
 # Runs every day rather than only Fri/Sat — the schedule has races on
 # Tuesdays (Mr. Dirt Track USA, Eve of Destruction), Wednesdays (Firecracker
-# 50) and Thursdays, and daily readings are what give next week's numbers a
-# trend to move against. A day with nothing scheduled is a cheap no-op.
+# 50) and Thursdays, and daily readings give next week's numbers a trend to
+# move against. A day with nothing scheduled is a cheap no-op.
 #
 # Cron is UTC and racing season is entirely EDT, so these land correctly
 # April through October. The January and March dates read an hour earlier.
 on:
   schedule:
-    - cron: "0 12 * * *"   # 8:00 AM ET
-    - cron: "0 16 * * *"   # 12:00 PM ET
-    - cron: "0 18 * * *"   # 2:00 PM ET
+    - cron: "0 12-17 * * *"   # hourly, 8am–1pm ET — change alerts only
+    - cron: "0 18 * * *"      # 2pm ET — always sends tonight's summary
+    - cron: "0 19-21 * * *"   # hourly, 3pm–5pm ET — change alerts through gates
   workflow_dispatch:
 
 permissions:
@@ -34,6 +36,8 @@ jobs:
       - name: Read forecast and write status
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Manual runs summarise too, so the button is a useful test.
+          SUMMARY: ${{ github.event.schedule == '0 18 * * *' || github.event_name == 'workflow_dispatch' }}
         run: node scripts/update-status.mjs
 
       - name: Confirm the files exist
@@ -41,8 +45,6 @@ jobs:
           ls -la data/
           test -f data/status.json || { echo "::error::status.json was not written"; exit 1; }
           test -f data/trend.json  || { echo "::error::trend.json was not written"; exit 1; }
-          echo "--- status.json ---"
-          head -c 400 data/status.json
 
       - name: Commit and push
         run: |
