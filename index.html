@@ -170,7 +170,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.17";
+const VERSION = "v1.18";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -539,6 +539,34 @@ function readWeather(ev, map){
         e.timeSource = { ...e.timeSource };
         for (const f of Object.keys(o.times)) e.timeSource[f] = "published";
       }
+    }
+
+    // Times MyRacePass published, captured by the workflow. Ranks below a
+    // hand override but above the track's generic defaults.
+    for (const e of data.events) {
+      const pub = status.published?.[`${e.date}|${e.track}`];
+      if (!pub) continue;
+      const manual = over[`${e.date}|${e.track}`]?.times || {};
+      for (const [f, v] of Object.entries(pub)) {
+        if (manual[f]) continue;                 // yours wins
+        e.times = { ...e.times, [f]: v };
+        e.timeSource = { ...e.timeSource, [f]: "published" };
+      }
+    }
+
+    // Dates MyRacePass lists that the schedule didn't — rescheduled races
+    // and makeup shows, found automatically.
+    for (const [k, d] of Object.entries(status.discovered || {})) {
+      const [date, track] = k.split("|");
+      if (data.events.some(e => e.date === date && e.track === track)) continue;
+      if (over[k]) continue;                     // handled by an override
+      const def = data.tracks[track]?.defaults || {};
+      data.events.push({
+        date, track, title: d.title, type: d.type || "race",
+        times: { ...def },
+        timeSource: Object.fromEntries(Object.keys(def).map(f => [f, "estimated"])),
+        _found: true,
+      });
     }
 
     // Events the schedule never had — rain dates, makeup shows.
