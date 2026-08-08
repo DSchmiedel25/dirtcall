@@ -90,6 +90,13 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 .wx .k{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--dim);margin-top:4px}
 .wx.pending .v{color:var(--dim)}
+.quip{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);
+  line-height:1.45;display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px}
+.quip .qi{font-size:13px}
+.quip .ql{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--dim)}
+.quip .qt{font-family:'Archivo',sans-serif;font-size:12.5px;font-style:italic;
+  color:var(--dust);flex-basis:100%;margin-top:3px}
 .t .v{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;
   color:var(--lights);line-height:1.1;letter-spacing:-.01em}
 .t.key .v{color:var(--yellow)}
@@ -158,7 +165,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.02";
+const VERSION = "v1.07";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -229,6 +236,7 @@ function card(ev, tracks, st, wx, today){
     ${wx && wx.why ? `<div class="why">${wx.why}</div>` : ""}
     ${rows ? `<div class="times">${rows}</div>` : ""}
     ${wxRow}
+    ${wxRow ? `<div class="quip">${quipFor(ev, wx)}</div>` : ""}
   </article>`;
 }
 
@@ -277,9 +285,10 @@ async function fetchWeather(tracks){
   const lon = codes.map(c => tracks[c].lon).join(",");
   const url = "https://api.open-meteo.com/v1/forecast" +
     `?latitude=${lat}&longitude=${lon}` +
-    "&hourly=precipitation,precipitation_probability,temperature_2m" +
+    "&hourly=precipitation,precipitation_probability,temperature_2m," +
+    "cloud_cover,wind_speed_10m,wind_gusts_10m,weather_code" +
     "&past_days=1&forecast_days=16" +
-    "&temperature_unit=fahrenheit&precipitation_unit=inch" +
+    "&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph" +
     "&timezone=America%2FNew_York";
   const res = await fetch(url);
   if(!res.ok) throw new Error("Open-Meteo " + res.status);
@@ -291,7 +300,11 @@ async function fetchWeather(tracks){
     hh.time.forEach((t,j)=> map.set(t.slice(0,13), {
       mm: hh.precipitation[j] ?? 0,
       prob: hh.precipitation_probability[j] ?? 0,
-      temp: hh.temperature_2m[j] ?? null
+      temp: hh.temperature_2m[j] ?? null,
+      cloud: hh.cloud_cover?.[j] ?? null,
+      wind: hh.wind_speed_10m?.[j] ?? 0,
+      gust: hh.wind_gusts_10m?.[j] ?? 0,
+      code: hh.weather_code?.[j] ?? 0
     }));
     out[code] = map;
   });
@@ -320,6 +333,7 @@ function temps(map, date, raceMin){
 
 function span(map, date, from, to){
   let rain = 0, prob = 0, temp = null, seen = 0;
+  let gust = 0, cloudSum = 0, cloudN = 0, storm = false;
   for(let m = from; m <= to; m += 60){
     const off = Math.floor(m/1440);
     const hr = ((Math.floor(m/60) % 24) + 24) % 24;
@@ -327,9 +341,120 @@ function span(map, date, from, to){
     if(!cell) continue;
     rain += cell.mm; prob = Math.max(prob, cell.prob);
     if(temp === null) temp = cell.temp;
+    gust = Math.max(gust, cell.gust, cell.wind);
+    if(cell.cloud !== null){ cloudSum += cell.cloud; cloudN++; }
+    if([95,96,99].includes(cell.code)) storm = true;
     seen++;
   }
-  return { rain: Math.round(rain*100)/100, prob, temp, seen };
+  return { rain: Math.round(rain*100)/100, prob, temp, seen,
+           gust: Math.round(gust), cloud: cloudN ? Math.round(cloudSum/cloudN) : null, storm };
+}
+
+
+// ---- quips ---------------------------------------------------------------
+// Picked by condition, then chosen deterministically off the date + track so
+// it doesn't reshuffle every time the page reloads.
+const QUIPS = {
+  storms:   { icon: "\u26C8\uFE0F", label: "Storms", lines: [
+    "Maybe don't sit on the aluminum bleachers.",
+    "Grandstands or lightning rods?",
+    "Mother Nature has other plans.",
+    "This could get interesting."
+  ]},
+  rain:     { icon: "\uD83C\uDF27\uFE0F", label: "Rain", lines: [
+    "Might be a couch night.",
+    "Bring a poncho and optimism.",
+    "Hope the concession stand has a roof.",
+    "Wet bleachers incoming."
+  ]},
+  showers:  { icon: "\uD83C\uDF27\uFE0F", label: "Light rain chance", lines: [
+    "Poncho might earn its keep.",
+    "Keep the raincoat in the truck.",
+    "Could be nothing. Could ruin everything.",
+    "Radar-watching weather."
+  ]},
+  dusty:    { icon: "\uD83D\uDCA8", label: "Dry + windy", lines: [
+    "You're eating dirt tonight.",
+    "Goggles wouldn't be unreasonable.",
+    "Dust forecast: yes.",
+    "Dirt track seasoning."
+  ]},
+  windy:    { icon: "\uD83D\uDCA8", label: "Windy", lines: [
+    "Secure your nachos.",
+    "Hat retention: questionable.",
+    "Dirt in places dirt shouldn't be.",
+    "Free dust exfoliation."
+  ]},
+  chilly:   { icon: "\uD83E\uDD76", label: "Chilly", lines: [
+    "Hoodie weather.",
+    "That aluminum seat is gonna be COLD.",
+    "Bring a blanket. Trust me.",
+    "July at 5, October by feature time."
+  ]},
+  drop:     { icon: "\uD83C\uDF21\uFE0F", label: "Big temp drop", lines: [
+    "Shorts now, hoodie later.",
+    "Don't trust the afternoon temperature.",
+    "Feature-time freeze incoming.",
+    "Leave a sweatshirt in the car."
+  ]},
+  hot:      { icon: "\uD83D\uDD25", label: "Hot", lines: [
+    "Sweating in the stands tonight.",
+    "Aluminum bleachers: preheated.",
+    "Cold drinks are mandatory.",
+    "You're getting cooked."
+  ]},
+  perfect:  { icon: "\uD83C\uDF21\uFE0F", label: "Perfect evening", lines: [
+    "Beer, bleachers, and race cars.",
+    "Grandstand approved.",
+    "Absolutely no weather excuses.",
+    "This is why we go."
+  ]},
+  sunny:    { icon: "\u2600\uFE0F", label: "Sunny", lines: [
+    "Bring sunscreen and sunglasses.",
+    "Bleacher-baking weather.",
+    "Perfect night to eat some dust.",
+    "Sun's out, modifieds out."
+  ]},
+  cloudy:   { icon: "\u2601\uFE0F", label: "Cloudy", lines: [
+    "Honestly? Perfect.",
+    "No sunburn, no complaints.",
+    "Good sitting weather.",
+    "Clouds doing us a favor."
+  ]},
+  nice:     { icon: "\uD83C\uDF24\uFE0F", label: "Nice", lines: [
+    "Prime grandstand weather.",
+    "Couldn't ask for better.",
+    "Perfect night at the track.",
+    "Get there early."
+  ]}
+};
+
+function classify(wx){
+  const hi = wx.hi, lo = wx.lo, drop = (hi !== null && lo !== null) ? hi - lo : 0;
+
+  if(wx.storm)                                   return "storms";
+  if(wx.during >= RACE_IN || wx.prob >= 60)      return "rain";
+  if(wx.prob >= 30)                              return "showers";
+  if(wx.gust >= 18 && wx.before === 0 && wx.prob < 20) return "dusty";
+  if(wx.gust >= 18)                              return "windy";
+  if(lo !== null && lo <= 48)                    return "chilly";
+  if(drop >= 28)                                 return "drop";
+  if(hi !== null && hi >= 88)                    return "hot";
+  // Sky before comfort: a clear night and an overcast one both read as
+  // "pleasant" on temperature alone, but they're different nights.
+  if(wx.cloud !== null && wx.cloud <= 30)        return "sunny";
+  if(wx.cloud !== null && wx.cloud >= 70)        return "cloudy";
+  if(hi !== null && hi >= 70 && hi <= 84 && lo !== null && lo >= 55 && wx.prob < 15)
+                                                 return "perfect";
+  return "nice";
+}
+
+function quipFor(ev, wx){
+  if(!wx) return "";
+  const q = QUIPS[classify(wx)];
+  const seed = (ev.date + ev.track).split("").reduce((a,c)=>a + c.charCodeAt(0), 0);
+  return `<span class="qi">${q.icon}</span><span class="ql">${q.label}</span>` +
+         `<span class="qt">${q.lines[seed % q.lines.length]}</span>`;
 }
 
 function readWeather(ev, map){
@@ -353,7 +478,8 @@ function readWeather(ev, map){
     why: reasons.length ? reasons.join(" \u00B7 ")
          : before.rain > 0 ? `${inches(before.rain)} earlier, but clear through the feature`
          : "Dry before gates, clear through the feature",
-    prob: during.prob, before: before.rain, during: during.rain, temp: during.temp
+    prob: during.prob, before: before.rain, during: during.rain, temp: during.temp,
+    gust: during.gust, cloud: during.cloud, storm: during.storm
   };
 }
 
