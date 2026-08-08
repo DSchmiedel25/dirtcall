@@ -165,7 +165,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.07";
+const VERSION = "v1.09";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -226,8 +226,8 @@ function card(ev, tracks, st, wx, today){
   const wxRow = (!past && ev.type !== "dark" && wx) ? `<div class="wx">
     <div><div class="v">${wx.hi === null ? "—" : Math.round(wx.hi) + "\u00B0"}<span class="sep">/</span>${wx.lo === null ? "—" : Math.round(wx.lo) + "\u00B0"}</div><div class="k">High / night</div></div>
     <div><div class="v${wx.prob >= 50 ? " warn" : ""}">${wx.prob}%</div><div class="k">Rain chance</div></div>
-    <div><div class="v${wx.before >= ANTECEDENT_IN ? " warn" : ""}">${inches(wx.before)}</div><div class="k">Before gates</div></div>
-    <div><div class="v${wx.during >= RACE_IN ? " warn" : ""}">${inches(wx.during)}</div><div class="k">During show</div></div>
+    <div><div class="v${wx.before >= ANTECEDENT_IN ? " warn" : ""}">${inches(wx.before)}</div><div class="k">Before pits</div></div>
+    <div><div class="v${wx.during >= RACE_IN ? " warn" : ""}">${inches(wx.during)}</div><div class="k">Pits to feature</div></div>
   </div>` : "";
 
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
@@ -333,20 +333,21 @@ function temps(map, date, raceMin){
 
 function span(map, date, from, to){
   let rain = 0, prob = 0, temp = null, seen = 0;
-  let gust = 0, cloudSum = 0, cloudN = 0, storm = false;
+  let gust = 0, cloudSum = 0, cloudN = 0, storm = false, peakAt = null;
   for(let m = from; m <= to; m += 60){
     const off = Math.floor(m/1440);
     const hr = ((Math.floor(m/60) % 24) + 24) % 24;
     const cell = map.get(`${shift(date,off)}T${String(hr).padStart(2,"0")}`);
     if(!cell) continue;
-    rain += cell.mm; prob = Math.max(prob, cell.prob);
+    rain += cell.mm;
+    if(cell.prob > prob){ prob = cell.prob; peakAt = hr; }
     if(temp === null) temp = cell.temp;
     gust = Math.max(gust, cell.gust, cell.wind);
     if(cell.cloud !== null){ cloudSum += cell.cloud; cloudN++; }
     if([95,96,99].includes(cell.code)) storm = true;
     seen++;
   }
-  return { rain: Math.round(rain*100)/100, prob, temp, seen,
+  return { rain: Math.round(rain*100)/100, prob, temp, seen, peakAt,
            gust: Math.round(gust), cloud: cloudN ? Math.round(cloudSum/cloudN) : null, storm };
 }
 
@@ -460,15 +461,20 @@ function quipFor(ev, wx){
 function readWeather(ev, map){
   const t = ev.times || {};
   if(!map || !t.gates || !t.race) return null;
-  const gates = toMin(t.gates), anchor = toMin(t.hotlaps || t.race);
-  const before = span(map, ev.date, gates - ANTECEDENT_HOURS*60, gates - 60);
-  const during = span(map, ev.date, anchor, toMin(t.race) + FEATURE_HOURS*60);
+  // The night starts when the pits open — that's when you're on site and
+  // when rain starts costing you the show. Nothing between arrival and the
+  // last lap falls outside a window.
+  const start = toMin(t.pits || t.gates);
+  const before = span(map, ev.date, start - ANTECEDENT_HOURS*60, start - 60);
+  const during = span(map, ev.date, start, toMin(t.race) + FEATURE_HOURS*60);
   if(!before.seen && !during.seen) return null;
 
   const reasons = [];
-  if(before.rain >= ANTECEDENT_IN) reasons.push(`${inches(before.rain)} before gates`);
-  if(during.rain >= RACE_IN)       reasons.push(`${inches(during.rain)} during the show`);
-  if(during.prob >= RACE_PROB)     reasons.push(`${during.prob}% at ${clock(t.hotlaps || t.race)}`);
+  const peak = during.peakAt === null ? "" :
+    ` at ${clock(String(during.peakAt).padStart(2,"0") + ":00")}`;
+  if(before.rain >= ANTECEDENT_IN) reasons.push(`${inches(before.rain)} before pits`);
+  if(during.rain >= RACE_IN)       reasons.push(`${inches(during.rain)} once you're there`);
+  if(during.prob >= RACE_PROB)     reasons.push(`${during.prob}%${peak}`);
 
   const range = temps(map, ev.date, toMin(t.race));
 
@@ -476,8 +482,8 @@ function readWeather(ev, map){
     hi: range.hi, lo: range.lo,
     flag: reasons.length ? "yellow" : "green",
     why: reasons.length ? reasons.join(" \u00B7 ")
-         : before.rain > 0 ? `${inches(before.rain)} earlier, but clear through the feature`
-         : "Dry before gates, clear through the feature",
+         : before.rain > 0 ? `${inches(before.rain)} earlier, but clear once you're there`
+         : "Dry all day, clear through the feature",
     prob: during.prob, before: before.rain, during: during.rain, temp: during.temp,
     gust: during.gust, cloud: during.cloud, storm: during.storm
   };
