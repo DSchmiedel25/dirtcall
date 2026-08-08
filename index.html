@@ -141,6 +141,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
   padding:22px 2px;line-height:1.6}
 .foot{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;
   color:var(--dim);margin-top:32px;padding-top:16px;border-top:1px solid var(--line)}
+.foot .ver{display:block;margin-top:10px;letter-spacing:.14em;color:var(--line)}
 </style>
 </head>
 <body>
@@ -155,6 +156,8 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
+const VERSION = "v1.0";
+
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -338,7 +341,7 @@ function readWeather(ev, map){
       fetch("data/status.json" + bust).then(r => r.ok ? r.json() : { events:{} }).catch(() => ({ events:{} }))
     ]);
   } catch (err) {
-    app.innerHTML = `<div class="msg">Couldn't load the schedule.<br>${err.message}</div>`;
+    app.innerHTML = `<div class="msg">Couldn't load the schedule.<br>${err.message}<br><br>${VERSION}</div>`;
     return;
   }
 
@@ -386,7 +389,11 @@ function readWeather(ev, map){
   html += `<div class="eyebrow"><h2>Next week</h2><span class="rule"></span>
     <span class="note">forecast only</span></div>`;
   html += nextWeek.length
-    ? nextWeek.map(e => nextRow(e, tracks, st[`${e.date}|${e.track}`])).join("")
+    ? nextWeek.map(e => nextRow(
+        e, tracks,
+        st[`${e.date}|${e.track}`],
+        weather ? readWeather(e, weather[e.track]) : null
+      )).join("")
     : `<div class="msg">Nothing scheduled.</div>`;
 
   html += `<div class="eyebrow"><h2>Rest of season</h2><span class="rule"></span>
@@ -402,7 +409,8 @@ function readWeather(ev, map){
   app.innerHTML = html;
   document.getElementById("foot").innerHTML =
     `Times from the ${data.season} schedule. ~ = estimated, not published.<br>` +
-    `Flags cover today and tomorrow only. Cancellations aren't detected.`;
+    `Flags cover today and tomorrow only. Cancellations aren't detected.` +
+    `<span class="ver">${VERSION}</span>`;
 
   if (!rest.length) return;
   const season = document.getElementById("season");
