@@ -1,22 +1,22 @@
 {
-  "generated": "2026-08-08T18:21:59.487Z",
+  "generated": "2026-08-08T19:18:54.054Z",
   "today": "2026-08-08",
   "events": {
     "2026-08-08|FON": {
       "flag": "green",
-      "why": "Dry all day · 44% through the feature",
-      "prob": 44,
+      "why": "Dry all day · 33% through the feature",
+      "prob": 33,
       "trend": [
-        44
+        33
       ],
       "direction": "flat"
     },
     "2026-08-08|LV": {
       "flag": "yellow",
-      "why": "1.02\" once you're there · 56% at 6pm",
-      "prob": 56,
+      "why": "61% at 6pm",
+      "prob": 61,
       "trend": [
-        56
+        61
       ],
       "direction": "flat"
     },
@@ -50,18 +50,18 @@
     "2026-08-21|AS": {
       "flag": null,
       "why": null,
-      "prob": 45,
+      "prob": 27,
       "trend": [
-        45
+        27
       ],
       "direction": "flat"
     },
     "2026-08-22|LV": {
       "flag": null,
       "why": null,
-      "prob": 29,
+      "prob": 27,
       "trend": [
-        29
+        27
       ],
       "direction": "flat"
     }
