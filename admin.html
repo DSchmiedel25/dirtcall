@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DirtCall — admin</title>
+<meta name="theme-color" content="#161210">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DirtCall Admin">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --track:#161210; --clay:#221B17; --clay-hi:#2B221C; --line:#3A2E26;
+  --dust:#B9AA9B; --dim:#7C6E62; --lights:#F4EFE6;
+  --green:#31C05C; --yellow:#F2BE17; --red:#E2382B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--track);color:var(--dust);
+  font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.45;
+  padding:0 14px calc(90px + env(safe-area-inset-bottom));
+  max-width:600px;margin:0 auto;-webkit-font-smoothing:antialiased;
+}
+.top{display:flex;align-items:baseline;justify-content:space-between;
+  padding:calc(20px + env(safe-area-inset-top)) 2px 16px;border-bottom:1px solid var(--line)}
+.wordmark{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.035em;
+  color:var(--lights);text-transform:uppercase;line-height:1}
+.wordmark span{color:var(--yellow)}
+.tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--track);background:var(--red);
+  padding:3px 7px 2px;border-radius:2px}
+
+label{display:block;font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+input,select,textarea{
+  width:100%;background:var(--track);color:var(--lights);
+  border:1px solid var(--line);border-radius:3px;padding:11px 12px;
+  font-family:'DM Mono',monospace;font-size:15px;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{outline:2px solid var(--yellow);outline-offset:1px;border-color:var(--dim)}
+select{background-image:none}
+
+button{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;border-radius:3px;padding:11px 15px;cursor:pointer;
+  border:1px solid var(--line);background:none;color:var(--dust)}
+button.primary{background:var(--yellow);color:var(--track);border-color:var(--yellow);font-weight:500}
+button.danger{color:var(--red);border-color:var(--line)}
+button:disabled{opacity:.4}
+button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+
+.panel{background:var(--clay);border:1px solid var(--line);border-radius:4px;
+  padding:16px;margin:18px 0}
+.panel h2{font-family:'Anton',sans-serif;font-weight:400;font-size:14px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--lights);margin-bottom:14px}
+.hint{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.6;
+  color:var(--dim);margin-top:10px}
+.hint a{color:var(--dust)}
+
+.eyebrow{display:flex;align-items:center;gap:12px;margin:26px 2px 10px}
+.eyebrow h2{font-family:'Anton',sans-serif;font-weight:400;font-size:14px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--lights);white-space:nowrap}
+.eyebrow .rule{flex:1;height:1px;background:var(--line)}
+
+.filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.filters button[aria-pressed="true"]{background:var(--dust);color:var(--track);border-color:var(--dust)}
+
+.ev{border:1px solid var(--line);border-left:3px solid var(--line);
+  border-radius:3px;margin-bottom:7px;background:var(--clay);overflow:hidden}
+.ev.dirty{border-left-color:var(--yellow)}
+.ev.rainout{border-left-color:var(--red)}
+.ev.added{border-left-color:var(--green)}
+.ev > summary{padding:12px 14px;cursor:pointer;list-style:none;
+  display:flex;align-items:baseline;gap:11px}
+.ev > summary::-webkit-details-marker{display:none}
+.ev .when{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;
+  color:var(--dim);width:56px;flex-shrink:0;text-transform:uppercase}
+.ev .who{flex:1;min-width:0}
+.ev .who .n{font-family:'Anton',sans-serif;font-size:14px;letter-spacing:.03em;
+  text-transform:uppercase;color:var(--lights);line-height:1.25}
+.ev .who .t{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--dim);
+  margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev .mark{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.11em;
+  text-transform:uppercase;flex-shrink:0;color:var(--dim)}
+.ev.rainout .mark{color:var(--red)}
+.ev.dirty .mark{color:var(--yellow)}
+.ev.added .mark{color:var(--green)}
+
+.body{padding:2px 14px 16px;border-top:1px solid var(--line)}
+.row{margin-top:14px}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+.times .est{font-size:9px;color:var(--dim);letter-spacing:.08em}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--clay-hi);
+  border-top:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:12px;justify-content:space-between;z-index:5}
+.bar .count{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)}
+.bar .count b{color:var(--yellow);font-weight:500}
+.msg{font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.6;
+  padding:14px 2px;color:var(--dim)}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--green)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wordmark">Dirt<span>Call</span></div>
+  <span class="tag">Admin</span>
+</header>
+
+<div id="app"><div class="msg">Loading…</div></div>
+
+<script>
+const REPO   = "DSchmiedel25/dirtcall";
+const PATH   = "data/overrides.json";
+const FIELDS = ["pits","gates","hotlaps","race"];
+const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONS   = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const RESULTS = ["", "rainout", "cancelled", "postponed"];
+
+let TOKEN   = localStorage.getItem("dc_token") || "";
+let events  = [];      // from events.json
+let tracks  = {};
+let over    = {};      // the overrides map, as edited
+let baseline = "{}";   // JSON of `over` as loaded, to detect changes
+let sha     = null;    // current file sha, needed to commit
+let filter  = "upcoming";
+
+const app = document.getElementById("app");
+const key = (e) => `${e.date}|${e.track}`;
+const parse = (iso) => new Date(iso + "T12:00:00");
+const fmt = (iso) => { const d = parse(iso); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONS[d.getMonth()]}`; };
+const todayISO = () => new Date().toLocaleDateString("en-CA");
+const dirty = () => JSON.stringify(over) !== baseline;
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/** base64 that survives non-ASCII (track names have en dashes) */
+function b64(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function unb64(s){
+  const bin = atob(s.replace(/\s/g, ""));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+// ---------- github ----------
+async function gh(method, body){
+  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${PATH}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 404 && method === "GET") return null;   // file not created yet
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${(await res.json()).message || "failed"}`);
+  return res.json();
+}
+
+async function loadOverrides(){
+  const file = await gh("GET");
+  if (!file) { over = {}; sha = null; }
+  else {
+    sha = file.sha;
+    const raw = JSON.parse(unb64(file.content));
+    delete raw._comment;
+    over = raw;
+  }
+  baseline = JSON.stringify(over);
+}
+
+async function save(){
+  const clean = {};
+  // strip empty entries so the file doesn't accumulate junk
+  for (const [k, v] of Object.entries(over)) {
+    const keep = {};
+    if (v.result) keep.result = v.result;
+    if (v.title) keep.title = v.title;
+    if (v.add) { keep.add = true; keep.type = v.type || "race"; }
+    if (v.times && Object.keys(v.times).length) keep.times = v.times;
+    if (Object.keys(keep).length) clean[k] = keep;
+  }
+  const sorted = {};
+  Object.keys(clean).sort().forEach(k => sorted[k] = clean[k]);
+
+  const res = await gh("PUT", {
+    message: `admin: ${Object.keys(sorted).length} override(s)`,
+    content: b64(JSON.stringify(sorted, null, 2) + "\n"),
+    ...(sha ? { sha } : {}),
+  });
+  sha = res.content.sha;
+  over = sorted;
+  baseline = JSON.stringify(over);
+}
+
+// ---------- model ----------
+/** events.json plus anything the overrides add, sorted */
+function allEvents(){
+  const list = events.map(e => ({ ...e }));
+  for (const [k, v] of Object.entries(over)) {
+    if (!v.add) continue;
+    const [date, track] = k.split("|");
+    if (list.some(e => e.date === date && e.track === track)) continue;
+    list.push({ date, track, title: v.title || "Added event", type: v.type || "race",
+                times: {}, timeSource: {}, _added: true });
+  }
+  return list.sort((a,b) => a.date.localeCompare(b.date) || a.track.localeCompare(b.track));
+}
+
+function effective(e){
+  const o = over[key(e)] || {};
+  return {
+    result: o.result || "",
+    title: o.title || e.title,
+    times: { ...e.times, ...(o.times || {}) },
+    overridden: o.times || {},
+    added: !!o.add,
+  };
+}
+
+function patch(k, fn){
+  over[k] = over[k] || {};
+  fn(over[k]);
+  render();
+}
+
+// ---------- render ----------
+function tokenPanel(){
+  return `<div class="panel">
+    <h2>GitHub token</h2>
+    <label for="tok">Fine-grained token, contents write</label>
+    <input id="tok" type="password" inputmode="text" autocomplete="off"
+           placeholder="github_pat_…" value="${esc(TOKEN)}">
+    <div class="row"><button class="primary" id="tok-save">Save token</button></div>
+    <div class="hint">
+      Create at github.com/settings/personal-access-tokens &rarr; only this repository
+      &rarr; Repository permissions &rarr; Contents: Read and write.<br>
+      Stored on this device only. It never leaves your phone except to GitHub.
+    </div>
+  </div>`;
+}
+
+function eventRow(e){
+  const eff = effective(e);
+  const k = key(e);
+  const o = over[k] || {};
+  const cls = [
+    eff.added ? "added" : "",
+    eff.result === "rainout" ? "rainout" : "",
+    Object.keys(o).length && !eff.added && eff.result !== "rainout" ? "dirty" : "",
+  ].filter(Boolean).join(" ");
+  const mark = eff.added ? "added"
+             : eff.result ? eff.result
+             : Object.keys(o).length ? "edited" : "";
+
+  const timeInputs = FIELDS.map(f => {
+    const val = eff.times[f] || "";
+    const est = e.timeSource?.[f] === "estimated" && !eff.overridden[f];
+    return `<div>
+      <label for="${k}-${f}">${f === "hotlaps" ? "Hot laps" : f === "race" ? "Racing" : f}
+        ${est ? '<span class="est">est</span>' : ""}</label>
+      <input type="time" id="${k}-${f}" value="${val}" data-k="${k}" data-f="${f}">
+    </div>`;
+  }).join("");
+
+  return `<details class="ev ${cls}">
+    <summary>
+      <span class="when">${fmt(e.date).replace(/^\w+ /,"")}</span>
+      <span class="who">
+        <span class="n">${esc(tracks[e.track]?.short || e.track)}</span>
+        <span class="t">${esc(eff.title)}</span>
+      </span>
+      ${mark ? `<span class="mark">${mark}</span>` : ""}
+    </summary>
+    <div class="body">
+      <div class="row">
+        <label for="${k}-res">Outcome</label>
+        <select id="${k}-res" data-k="${k}" data-res="1">
+          ${RESULTS.map(r => `<option value="${r}"${r===eff.result?" selected":""}>${r || "ran as scheduled"}</option>`).join("")}
+        </select>
+      </div>
+      <div class="row">
+        <label for="${k}-title">Title</label>
+        <input type="text" id="${k}-title" value="${esc(eff.title)}" data-k="${k}" data-title="1">
+      </div>
+      <div class="times">${timeInputs}</div>
+      ${Object.keys(over[k] || {}).length ? `<div class="row">
+        <button class="danger" data-clear="${k}">${eff.added ? "Delete event" : "Clear overrides"}</button>
+      </div>` : ""}
+    </div>
+  </details>`;
+}
+
+function addPanel(){
+  const codes = Object.keys(tracks);
+  return `<details class="panel" id="addpanel">
+    <summary style="cursor:pointer;list-style:none">
+      <h2 style="margin:0">Add an event &nbsp;+</h2>
+    </summary>
+    <div class="row">
+      <label for="a-date">Date</label>
+      <input type="date" id="a-date" value="${todayISO()}">
+    </div>
+    <div class="row">
+      <label for="a-track">Track</label>
+      <select id="a-track">
+        ${codes.map(c => `<option value="${c}">${esc(tracks[c].short)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="row">
+      <label for="a-title">Title</label>
+      <input type="text" id="a-title" placeholder="Rain date — Fonda 200">
+    </div>
+    <div class="row"><button class="primary" id="a-go">Add event</button></div>
+    <div class="hint">Times default to the track's usual card. Edit them after adding.</div>
+  </details>`;
+}
+
+function render(){
+  const today = todayISO();
+  let list = allEvents();
+  if (filter === "upcoming") list = list.filter(e => e.date >= today);
+  else if (filter === "edited") list = list.filter(e => over[key(e)]);
+
+  app.innerHTML =
+    tokenPanel() +
+    addPanel() +
+    `<div class="eyebrow"><h2>Events</h2><span class="rule"></span></div>
+     <div class="filters">
+       <button data-filter="upcoming" aria-pressed="${filter==="upcoming"}">Upcoming</button>
+       <button data-filter="all" aria-pressed="${filter==="all"}">All ${allEvents().length}</button>
+       <button data-filter="edited" aria-pressed="${filter==="edited"}">Edited ${Object.keys(over).length}</button>
+     </div>` +
+    (list.length ? list.map(eventRow).join("") : `<div class="msg">Nothing here.</div>`) +
+    `<div id="status"></div>
+     <div class="bar">
+       <span class="count">${dirty() ? "<b>unsaved changes</b>" : "no changes"}</span>
+       <button class="primary" id="commit" ${dirty() && TOKEN ? "" : "disabled"}>Commit</button>
+     </div>`;
+}
+
+function say(text, kind=""){
+  const el = document.getElementById("status");
+  if (el) el.innerHTML = `<div class="msg ${kind}">${esc(text)}</div>`;
+}
+
+// ---------- events ----------
+document.addEventListener("click", async (ev) => {
+  const t = ev.target;
+
+  if (t.id === "tok-save") {
+    TOKEN = document.getElementById("tok").value.trim();
+    localStorage.setItem("dc_token", TOKEN);
+    say("Token saved. Loading overrides…");
+    try { await loadOverrides(); render(); say("Connected.", "ok"); }
+    catch (err) { render(); say(err.message, "err"); }
+    return;
+  }
+
+  if (t.dataset.filter) { filter = t.dataset.filter; render(); return; }
+
+  if (t.dataset.clear) { delete over[t.dataset.clear]; render(); return; }
+
+  if (t.id === "a-go") {
+    const date  = document.getElementById("a-date").value;
+    const track = document.getElementById("a-track").value;
+    const title = document.getElementById("a-title").value.trim();
+    if (!date || !title) { say("Date and title are both needed.", "err"); return; }
+    over[`${date}|${track}`] = { add: true, type: "race", title };
+    filter = "edited";
+    render();
+    say(`Added ${title} on ${fmt(date)}.`, "ok");
+    return;
+  }
+
+  if (t.id === "commit") {
+    t.disabled = true;
+    say("Committing…");
+    try {
+      await save();
+      render();
+      say("Committed. Live in a minute or two.", "ok");
+    } catch (err) {
+      render();
+      say(err.message, "err");
+    }
+    return;
+  }
+});
+
+document.addEventListener("change", (ev) => {
+  const d = ev.target.dataset;
+  if (!d.k) return;
+  const k = d.k, v = ev.target.value;
+  if (d.res)   patch(k, o => { if (v) o.result = v; else delete o.result; });
+  else if (d.title) {
+    const orig = events.find(e => key(e) === k);
+    patch(k, o => { if (orig && v === orig.title) delete o.title; else o.title = v; });
+  }
+  else if (d.f) patch(k, o => {
+    o.times = o.times || {};
+    const orig = events.find(e => key(e) === k);
+    if (!v || (orig && orig.times[d.f] === v)) delete o.times[d.f];
+    else o.times[d.f] = v;
+    if (!Object.keys(o.times).length) delete o.times;
+  });
+});
+
+// ---------- boot ----------
+(async function(){
+  try {
+    const data = await fetch("data/events.json?v=" + Date.now()).then(r => r.json());
+    events = data.events;
+    tracks = data.tracks;
+  } catch (err) {
+    app.innerHTML = `<div class="msg err">Couldn't load events.json — ${esc(err.message)}</div>`;
+    return;
+  }
+  if (TOKEN) {
+    try { await loadOverrides(); } catch (err) { render(); say(err.message, "err"); return; }
+  }
+  render();
+  if (!TOKEN) say("Paste a token above to load and edit overrides.");
+})();
+</script>
+</body>
+</html>

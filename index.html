@@ -170,7 +170,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.14";
+const VERSION = "v1.16";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -508,10 +508,45 @@ function readWeather(ev, map){
   const bust = "?v=" + Date.now();
   let data, status;
   try {
-    [data, status] = await Promise.all([
+    let over;
+    [data, status, over] = await Promise.all([
       fetch("data/events.json" + bust).then(r => r.json()),
-      fetch("data/status.json" + bust).then(r => r.ok ? r.json() : { events:{} }).catch(() => ({ events:{} }))
+      fetch("data/status.json" + bust).then(r => r.ok ? r.json() : { events:{} }).catch(() => ({ events:{} })),
+      fetch("data/overrides.json" + bust).then(r => r.ok ? r.json() : {}).catch(() => ({}))
     ]);
+    delete over._comment;
+
+    // Everything hand-entered lives in overrides.json, keyed "DATE|TRACK".
+    // events.json is generated and would lose these on a rebuild.
+    for (const e of data.events) {
+      const o = over[`${e.date}|${e.track}`];
+      if (!o) continue;
+      if (o.result) e.result = o.result;
+      if (o.title)  e.title = o.title;
+      if (o.times) {
+        e.times = { ...e.times, ...o.times };
+        e.timeSource = { ...e.timeSource };
+        for (const f of Object.keys(o.times)) e.timeSource[f] = "published";
+      }
+    }
+
+    // Events the schedule never had — rain dates, makeup shows.
+    for (const [k, o] of Object.entries(over)) {
+      if (!o.add) continue;
+      const [date, track] = k.split("|");
+      if (data.events.some(e => e.date === date && e.track === track)) continue;
+      const def = data.tracks[track]?.defaults || {};
+      data.events.push({
+        date, track,
+        title: o.title || "Added event",
+        type: o.type || "race",
+        times: { ...def, ...(o.times || {}) },
+        timeSource: Object.fromEntries(Object.keys(def).map(f =>
+          [f, (o.times && o.times[f]) ? "published" : "estimated"])),
+        result: o.result,
+      });
+    }
+    data.events.sort((a,b) => a.date.localeCompare(b.date) || a.track.localeCompare(b.track));
   } catch (err) {
     app.innerHTML = `<div class="msg">Couldn't load the schedule.<br>${err.message}<br><br>${VERSION}</div>`;
     return;
