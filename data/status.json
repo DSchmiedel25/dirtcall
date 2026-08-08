@@ -1,9 +1,9 @@
 {
-  "generated": "2026-08-08T17:23:47.367Z",
+  "generated": "2026-08-08T17:39:24.575Z",
   "today": "2026-08-08",
   "events": {
     "2026-08-08|FON": {
-      "flag": "yellow",
+      "flag": "green",
       "why": "Dry all day · 37% through the feature",
       "prob": 37,
       "trend": [
@@ -13,7 +13,7 @@
     },
     "2026-08-08|LV": {
       "flag": "yellow",
-      "why": "0.43\" once you're there · 52% at 6pm",
+      "why": "1.02\" once you're there · 52% at 6pm",
       "prob": 52,
       "trend": [
         52
