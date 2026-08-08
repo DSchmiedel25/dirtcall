@@ -214,8 +214,8 @@ function card(ev, tracks, st, wx, today){
   const wxRow = (!past && ev.type !== "dark" && wx) ? `<div class="wx">
     <div><div class="v">${wx.temp === null ? "—" : Math.round(wx.temp) + "\u00B0"}</div><div class="k">At hot laps</div></div>
     <div><div class="v${wx.prob >= 50 ? " warn" : ""}">${wx.prob}%</div><div class="k">Rain chance</div></div>
-    <div><div class="v${wx.before >= 5 ? " warn" : ""}">${wx.before} mm</div><div class="k">Before gates</div></div>
-    <div><div class="v${wx.during >= 1 ? " warn" : ""}">${wx.during} mm</div><div class="k">During show</div></div>
+    <div><div class="v${wx.before >= ANTECEDENT_IN ? " warn" : ""}">${inches(wx.before)}</div><div class="k">Before gates</div></div>
+    <div><div class="v${wx.during >= RACE_IN ? " warn" : ""}">${inches(wx.during)}</div><div class="k">During show</div></div>
   </div>` : "";
 
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
@@ -227,21 +227,22 @@ function card(ev, tracks, st, wx, today){
   </article>`;
 }
 
-function nextRow(ev, tracks, st){
+function nextRow(ev, tracks, st, wx){
   const t = tracks[ev.track];
-  let trendHTML = "", pctHTML = "";
-  if (st) {
-    trendHTML = sparkline(st.trend);
-    const arrow = st.direction === "up" ? "&#8593;" : st.direction === "down" ? "&#8595;" : "";
-    pctHTML = `<div class="pct ${st.direction}">${st.prob}%<span class="ar">${arrow}</span></div>`;
-  } else {
-    pctHTML = `<div class="pct">—</div>`;
-  }
+  const trendHTML = st && st.trend ? sparkline(st.trend) : "";
+  const dir = st ? st.direction : "flat";
+  const arrow = dir === "up" ? "&#8593;" : dir === "down" ? "&#8595;" : "";
+  const prob = wx ? wx.prob : (st ? st.prob : null);
+
+  const readout = prob === null
+    ? `<div class="pct">—</div>`
+    : `<div class="pct ${dir}">${prob}%<span class="ar">${arrow}</span></div>`;
+
   return `<div class="row">
     <div class="when">${DAYS[parse(ev.date).getDay()]} ${parse(ev.date).getDate()}</div>
     <div class="who"><div class="n">${t.short.replace("-","\u2011")}</div>
       <div class="s">${ev.title}</div></div>
-    <div class="trend">${trendHTML}${pctHTML}</div>
+    <div class="trend">${trendHTML}${readout}</div>
   </div>`;
 }
 
@@ -255,7 +256,12 @@ function seasonRow(ev, tracks, showTrack){
 }
 
 // ---- weather, fetched straight from Open-Meteo (no key needed) ----------
-const ANTECEDENT_HOURS = 8, ANTECEDENT_MM = 5, RACE_MM = 1, RACE_PROB = 50, FEATURE_HOURS = 3;
+const ANTECEDENT_HOURS = 8;
+const ANTECEDENT_IN = 0.20;  // rain already down before gates
+const RACE_IN       = 0.04;  // rain forecast during the show
+const RACE_PROB     = 50;
+const FEATURE_HOURS = 3;
+const inches = (n) => n.toFixed(2) + '"';
 
 async function fetchWeather(tracks){
   const codes = Object.keys(tracks);
@@ -264,7 +270,8 @@ async function fetchWeather(tracks){
   const url = "https://api.open-meteo.com/v1/forecast" +
     `?latitude=${lat}&longitude=${lon}` +
     "&hourly=precipitation,precipitation_probability,temperature_2m" +
-    "&past_days=1&forecast_days=16&temperature_unit=fahrenheit" +
+    "&past_days=1&forecast_days=16" +
+    "&temperature_unit=fahrenheit&precipitation_unit=inch" +
     "&timezone=America%2FNew_York";
   const res = await fetch(url);
   if(!res.ok) throw new Error("Open-Meteo " + res.status);
@@ -286,17 +293,17 @@ async function fetchWeather(tracks){
 const toMin = (s) => { const [h,m] = s.split(":").map(Number); return h*60+m; };
 
 function span(map, date, from, to){
-  let mm = 0, prob = 0, temp = null, seen = 0;
+  let rain = 0, prob = 0, temp = null, seen = 0;
   for(let m = from; m <= to; m += 60){
     const off = Math.floor(m/1440);
     const hr = ((Math.floor(m/60) % 24) + 24) % 24;
     const cell = map.get(`${shift(date,off)}T${String(hr).padStart(2,"0")}`);
     if(!cell) continue;
-    mm += cell.mm; prob = Math.max(prob, cell.prob);
+    rain += cell.mm; prob = Math.max(prob, cell.prob);
     if(temp === null) temp = cell.temp;
     seen++;
   }
-  return { mm: Math.round(mm*10)/10, prob, temp, seen };
+  return { rain: Math.round(rain*100)/100, prob, temp, seen };
 }
 
 function readWeather(ev, map){
@@ -308,14 +315,16 @@ function readWeather(ev, map){
   if(!before.seen && !during.seen) return null;
 
   const reasons = [];
-  if(before.mm >= ANTECEDENT_MM) reasons.push(`${before.mm} mm before gates`);
-  if(during.mm >= RACE_MM)       reasons.push(`${during.mm} mm during the show`);
-  if(during.prob >= RACE_PROB)   reasons.push(`${during.prob}% at ${clock(t.hotlaps || t.race)}`);
+  if(before.rain >= ANTECEDENT_IN) reasons.push(`${inches(before.rain)} before gates`);
+  if(during.rain >= RACE_IN)       reasons.push(`${inches(during.rain)} during the show`);
+  if(during.prob >= RACE_PROB)     reasons.push(`${during.prob}% at ${clock(t.hotlaps || t.race)}`);
 
   return {
     flag: reasons.length ? "yellow" : "green",
-    why: reasons.length ? reasons.join(" \u00B7 ") : "Dry before gates, clear through the feature",
-    prob: during.prob, before: before.mm, during: during.mm, temp: during.temp
+    why: reasons.length ? reasons.join(" \u00B7 ")
+         : before.rain > 0 ? `${inches(before.rain)} earlier, but clear through the feature`
+         : "Dry before gates, clear through the feature",
+    prob: during.prob, before: before.rain, during: during.rain, temp: during.temp
   };
 }
 
