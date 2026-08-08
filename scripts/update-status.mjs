@@ -141,21 +141,49 @@ function assess(event, tracks, byHour) {
 }
 
 // ---- notify --------------------------------------------------------------
+/**
+ * HTTP headers are Latin-1 only, so the title has to be plain ASCII.
+ * Em dashes, curly quotes and the degree sign all break it otherwise.
+ */
+function ascii(s) {
+  return String(s)
+    .replace(/[\u2010-\u2015]/g, "-")   // dashes
+    .replace(/[\u2018\u2019]/g, "'")    // curly single quotes
+    .replace(/[\u201C\u201D]/g, '"')    // curly double quotes
+    .replace(/\u00B7/g, "-")            // middle dot
+    .replace(/\u00B0/g, " deg")
+    .replace(/[^\x20-\x7E]/g, "");      // anything else non-printable-ASCII
+}
+
 async function notify(title, message, priority = "default") {
-  if (!NTFY_TOPIC) return;
+  if (!NTFY_TOPIC) {
+    console.log(`  (would notify: ${ascii(title)})`);
+    return;
+  }
   try {
-    await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+    const res = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
       method: "POST",
-      headers: { Title: title, Priority: priority, Tags: "checkered_flag" },
+      headers: {
+        Title: ascii(title),
+        Priority: priority,
+        Tags: "checkered_flag",
+        "Content-Type": "text/plain; charset=utf-8",
+      },
       body: message,
     });
+    if (res.ok) {
+      console.log(`  ntfy ok: ${ascii(title)}`);
+    } else {
+      console.error(`  ntfy rejected (${res.status}): ${await res.text()}`);
+    }
   } catch (err) {
-    console.error("ntfy failed:", err.message);
+    console.error("  ntfy threw:", err.message);
   }
 }
 
 // ---- main ----------------------------------------------------------------
 console.log("cwd:", process.cwd());
+console.log("NTFY_TOPIC:", NTFY_TOPIC ? `set (${NTFY_TOPIC.length} chars)` : "NOT SET");
 console.log("node:", process.version);
 
 let data;
@@ -237,12 +265,12 @@ for (const e of upcoming) {
     const name = data.tracks[e.track].short;
     if (read.flag === "yellow") {
       alerts.push({
-        title: `${name} — yellow`,
+        title: `${name}: YELLOW`,
         body: `${e.title}\n${read.why}`,
         priority: "high",
       });
     } else if (read.flag === "green" && was === "yellow") {
-      alerts.push({ title: `${name} — back to green`, body: read.why });
+      alerts.push({ title: `${name}: back to green`, body: read.why });
     }
   }
 }
