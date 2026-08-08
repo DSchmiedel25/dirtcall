@@ -170,7 +170,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.16";
+const VERSION = "v1.17";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -209,20 +209,29 @@ const BADGE = { practice:"Practice", dark:"Dark", raindate:"Rain date", offtrack
 
 function card(ev, tracks, st, wx, today){
   const t = tracks[ev.track], times = ev.times || {}, src = ev.timeSource || {};
-  const past = ev.date < today || !!ev.result;
+  const called = st && ["rainout","cancelled","postponed"].includes(st.official);
+  const past = ev.date < today || !!ev.result || called;
   const live = ev.date === today || ev.date === shift(today,1);
 
   let cls, label;
-  // A hand-entered result always wins over anything inferred.
-  const washed = !ev.result && past && wx && wx.during >= WASHOUT_IN;
+  // Precedence, strongest claim first:
+  //   1. what you entered by hand      (overrides.json)
+  //   2. what the track posted         (MyRacePass, via status.json)
+  //   3. rain we measured afterwards   (inference)
+  //   4. what the forecast expects
+  const CALLED = { rainout:"Rained out", cancelled:"Cancelled", postponed:"Postponed" };
+  const said = st && st.official;
+  const washed = !ev.result && !said && past && wx && wx.during >= WASHOUT_IN;
 
-  if (ev.type === "dark")        { cls = "is-none"; label = "Dark"; }
-  else if (ev.result === "rainout") { cls = "is-red is-done"; label = "Rained out"; }
-  else if (washed)               { cls = "is-red is-done"; label = "Likely washed out"; }
-  else if (past)                 { cls = "is-done"; label = "Checkered"; }
-  else if (wx)                   { cls = "is-" + wx.flag; label = STATE[wx.flag]; }
-  else if (st && st.flag)        { cls = "is-" + st.flag; label = STATE[st.flag]; }
-  else                           { cls = "is-none"; label = ev.type === "practice" ? "Practice" : "No reading"; }
+  if (ev.type === "dark")           { cls = "is-none"; label = "Dark"; }
+  else if (ev.result)               { cls = "is-red is-done"; label = CALLED[ev.result] || ev.result; }
+  else if (CALLED[said])            { cls = "is-red is-done"; label = CALLED[said]; }
+  else if (said === "live")         { cls = "is-green"; label = "Racing now"; }
+  else if (washed)                  { cls = "is-red is-done"; label = "Likely washed out"; }
+  else if (past)                    { cls = "is-done"; label = "Checkered"; }
+  else if (wx)                      { cls = "is-" + wx.flag; label = STATE[wx.flag]; }
+  else if (st && st.flag)           { cls = "is-" + st.flag; label = STATE[st.flag]; }
+  else                              { cls = "is-none"; label = ev.type === "practice" ? "Practice" : "No reading"; }
 
   const time = (k, key) => {
     if (!times[k]) return "";
@@ -243,8 +252,10 @@ function card(ev, tracks, st, wx, today){
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
     <div class="head"><h3>${t.short.replace("-","\u2011")}</h3><div class="state">${label}</div></div>
     <div class="bill">${ev.title}</div>
-    ${washed ? `<div class="why">${inches(wx.during)} fell during the show</div>`
-             : wxRow && wx.why ? `<div class="why">${wx.why}</div>` : ""}
+    ${ev.result ? `<div class="why">Recorded by hand</div>`
+     : CALLED[said] ? `<div class="why">Posted by the track</div>`
+     : washed ? `<div class="why">${inches(wx.during)} fell during the show</div>`
+     : wxRow && wx.why ? `<div class="why">${wx.why}</div>` : ""}
     ${rows ? `<div class="times">${rows}</div>` : ""}
     ${wxRow}
     ${wxRow ? `<div class="quip">${quipFor(ev, wx)}</div>` : ""}
