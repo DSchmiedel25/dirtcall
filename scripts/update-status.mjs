@@ -233,17 +233,23 @@ function parseSchedule(html, year) {
     hits.push({ index: m.index, end: m.index + m[0].length, month: m[1], day: +m[2], year: +m[3] });
   }
 
-  const out = {};
+  const out = { status: {}, titles: {} };
   hits.forEach((h, i) => {
     if (h.year !== year) return;
-    // Look only as far as the next dated block, so a status can't bleed across.
-    const slice = text.slice(h.end, i + 1 < hits.length ? hits[i + 1].index : h.end + 900);
+    const stop = i + 1 < hits.length ? hits[i + 1].index : h.end + 900;
+    // Look only as far as the next dated block, so nothing bleeds across.
+    const slice = text.slice(h.end, stop);
+    const mi = MONTHS.findIndex((x) => x.toLowerCase() === h.month.toLowerCase());
+    const iso = `${h.year}-${String(mi + 1).padStart(2, "0")}-${String(h.day).padStart(2, "0")}`;
+
+    if (!out.titles[iso]) {
+      const t = titleNear(text, h.end, stop);
+      if (t.length > 3) out.titles[iso] = t;
+    }
     for (const [re, status] of STATUS_WORDS) {
       if (re.test(slice)) {
-        const mi = MONTHS.findIndex((x) => x.toLowerCase() === h.month.toLowerCase());
-        const iso = `${h.year}-${String(mi + 1).padStart(2, "0")}-${String(h.day).padStart(2, "0")}`;
         // First match wins, and the list is ordered by how much it matters.
-        if (!out[iso]) out[iso] = status;
+        if (!out.status[iso]) out.status[iso] = status;
         break;
       }
     }
@@ -251,8 +257,63 @@ function parseSchedule(html, year) {
   return out;
 }
 
+
+/** "4:00 PM" -> "16:00" */
+function to24(str) {
+  const m = /(\d{1,2}):(\d{2})\s*([AP])M/i.exec(str);
+  if (!m) return null;
+  let h = +m[1] % 12;
+  if (m[3].toUpperCase() === "P") h += 12;
+  return `${String(h).padStart(2, "0")}:${m[2]}`;
+}
+
+const TIME_LABELS = [
+  [/pits?\s*open\D{0,20}?(\d{1,2}:\d{2}\s*[AP]M)/i,      "pits"],
+  [/gates?\s*open\D{0,20}?(\d{1,2}:\d{2}\s*[AP]M)/i,     "gates"],
+  [/hot\s*laps?\s*(?:at)?\D{0,20}?(\d{1,2}:\d{2}\s*[AP]M)/i, "hotlaps"],
+  [/racing\s*starts?\D{0,20}?(\d{1,2}:\d{2}\s*[AP]M)/i,  "race"],
+];
+
+/**
+ * The schedule page publishes full times only for the "Next Event" block.
+ * Grab them each run and the estimated times fill in over the season, one
+ * event at a time, as each becomes next.
+ */
+function parseNextEventTimes(html, year) {
+  const text = stripTags(html);
+  const at = text.search(/Next\s+Event/i);
+  if (at < 0) return null;
+  const seg = text.slice(at, at + 2500);
+
+  const dm = new RegExp(
+    `(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,\\s+(${MONTHS.join("|")})\\s+(\\d{1,2}),\\s+(${year})`, "i"
+  ).exec(seg);
+  if (!dm) return null;
+
+  const mi = MONTHS.findIndex((x) => x.toLowerCase() === dm[1].toLowerCase());
+  const date = `${dm[3]}-${String(mi + 1).padStart(2, "0")}-${String(+dm[2]).padStart(2, "0")}`;
+
+  const times = {};
+  for (const [re, field] of TIME_LABELS) {
+    const m = re.exec(seg);
+    const v = m && to24(m[1]);
+    if (v) times[field] = v;
+  }
+  return Object.keys(times).length ? { date, times } : null;
+}
+
+/** Rough title for a date MRP has that our schedule doesn't. */
+function titleNear(text, from, to) {
+  let t = text.slice(from, Math.min(to, from + 300));
+  t = t.split(/\b(?:Rain\s*Out|Results|Lineups|Live\s*Now|Tickets|Details|Cancell?ed|Postponed)\b/i)[0];
+  t = t.replace(/\s+/g, " ").trim();
+  // drop a trailing class list, which always follows the title
+  t = t.split(/(?:DIRTcar|Amsterdam Truck|Swagger Factory|Sprint Cars of|Empire Super|Super DIRTCar)/)[0];
+  return t.replace(/[\s\u2013\u2014-]+$/, "").slice(0, 120).trim();
+}
+
 async function fetchOfficial(tracks, year) {
-  const out = {};
+  const out = { status: {}, titles: {}, times: {}, dates: {} };
   for (const [code, t] of Object.entries(tracks)) {
     if (!t.mrp) continue;
     const url = `https://www.myracepass.com/tracks/${t.mrp}/schedule?year=${year}`;
@@ -261,9 +322,20 @@ async function fetchOfficial(tracks, year) {
         headers: { "User-Agent": "DirtCall/1.0 (personal race schedule tool)" },
       });
       if (!res.ok) { console.error(`  ${code}: MRP ${res.status}`); continue; }
-      const found = parseSchedule(await res.text(), year);
-      for (const [date, status] of Object.entries(found)) out[`${date}|${code}`] = status;
-      console.log(`  ${code}: ${Object.keys(found).length} dated statuses`);
+      const html = await res.text();
+      const found = parseSchedule(html, year);
+      for (const [date, status] of Object.entries(found.status))
+        out.status[`${date}|${code}`] = status;
+      for (const [date, title] of Object.entries(found.titles))
+        out.titles[`${date}|${code}`] = title;
+      out.dates[code] = Object.keys(found.titles);
+
+      const next = parseNextEventTimes(html, year);
+      if (next) out.times[`${next.date}|${code}`] = next.times;
+
+      console.log(`  ${code}: ${Object.keys(found.status).length} statuses, ` +
+                  `${out.dates[code].length} dates` +
+                  (next ? `, times for ${next.date}` : ", no published times"));
     } catch (err) {
       console.error(`  ${code}: ${err.message}`);
     }
@@ -324,13 +396,39 @@ try {
 
 // The promoter's own word, where we can get it.
 console.log("Checking MyRacePass...");
-const official = await fetchOfficial(data.tracks, Number(today.slice(0, 4)));
+const mrp = await fetchOfficial(data.tracks, Number(today.slice(0, 4)));
+const official = mrp.status;
 
-const status = { generated: new Date().toISOString(), today, official, events: {} };
+// Dates MyRacePass lists that our schedule doesn't have — rescheduled races,
+// makeup shows. Surfaced so they appear on the page without hand-entry.
+const known = new Set(data.events.map((e) => key(e)));
+const discovered = {};
+for (const [code, dates] of Object.entries(mrp.dates)) {
+  for (const date of dates) {
+    const k = `${date}|${code}`;
+    if (known.has(k)) continue;
+    if (date < today) continue;              // don't backfill history
+    discovered[k] = { title: mrp.titles[k] || "Added event", type: "race" };
+  }
+}
+if (Object.keys(discovered).length)
+  console.log(`discovered ${Object.keys(discovered).length} event(s) not in events.json`);
+
+// Published times, captured from each track's "next event" block.
+const published = mrp.times;
+if (Object.keys(published).length)
+  console.log(`published times for: ${Object.keys(published).join(", ")}`);
+
+const status = {
+  generated: new Date().toISOString(), today,
+  official, discovered, published,
+  events: {},
+};
 const alerts = [];
 
 for (const e of upcoming) {
   const k = key(e);
+  if (published[k]) e.times = { ...e.times, ...published[k] };
   const read = assess(e, data.tracks, weather[e.track]);
   if (!read) continue;
 
