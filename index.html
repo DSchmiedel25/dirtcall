@@ -165,7 +165,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.09";
+const VERSION = "v1.10";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -233,7 +233,7 @@ function card(ev, tracks, st, wx, today){
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
     <div class="head"><h3>${t.short.replace("-","\u2011")}</h3><div class="state">${label}</div></div>
     <div class="bill">${ev.title}</div>
-    ${wx && wx.why ? `<div class="why">${wx.why}</div>` : ""}
+    ${wxRow && wx.why ? `<div class="why">${wx.why}</div>` : ""}
     ${rows ? `<div class="times">${rows}</div>` : ""}
     ${wxRow}
     ${wxRow ? `<div class="quip">${quipFor(ev, wx)}</div>` : ""}
