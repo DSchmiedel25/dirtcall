@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DirtCall</title>
+<meta name="theme-color" content="#161210">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DirtCall">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --track:#161210; --clay:#221B17; --line:#3A2E26;
+  --dust:#B9AA9B; --dim:#7C6E62; --lights:#F4EFE6;
+  --green:#31C05C; --yellow:#F2BE17; --red:#E2382B; --check:#8E8377;
+  --rail:9px; --pad:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--track);color:var(--dust);
+  font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.45;
+  padding:0 14px calc(60px + env(safe-area-inset-bottom));
+  max-width:600px;margin:0 auto;-webkit-font-smoothing:antialiased;
+}
+.top{display:flex;align-items:baseline;justify-content:space-between;
+  padding:calc(22px + env(safe-area-inset-top)) 2px 18px;border-bottom:1px solid var(--line)}
+.wordmark{font-family:'Anton',sans-serif;font-size:27px;letter-spacing:.035em;
+  color:var(--lights);text-transform:uppercase;line-height:1}
+.wordmark span{color:var(--yellow)}
+.today{font-family:'DM Mono',monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim)}
+
+.eyebrow{display:flex;align-items:center;gap:12px;margin:32px 2px 12px}
+.eyebrow h2{font-family:'Anton',sans-serif;font-weight:400;font-size:15px;
+  letter-spacing:.17em;text-transform:uppercase;color:var(--lights);white-space:nowrap}
+.eyebrow .rule{flex:1;height:1px;background:var(--line)}
+.eyebrow .note{font-family:'DM Mono',monospace;font-size:10.5px;
+  letter-spacing:.07em;color:var(--dim);white-space:nowrap}
+
+.daymark{display:flex;align-items:baseline;gap:9px;margin:19px 0 8px 2px}
+.daymark .d{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--dust)}
+.daymark .tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--track);background:var(--yellow);
+  padding:2px 6px 1px;border-radius:2px}
+
+.card{position:relative;background:var(--clay);border:1px solid var(--line);
+  border-left:none;border-radius:3px;
+  padding:var(--pad) var(--pad) var(--pad) calc(var(--pad) + var(--rail));
+  margin-bottom:9px;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;
+  width:var(--rail);background:var(--check)}
+.card.is-green::before{background:var(--green)}
+.card.is-yellow::before{background:var(--yellow)}
+.card.is-red::before{background:var(--red)}
+.card.is-none::before{background:var(--line)}
+.card.is-done::before{
+  background:repeating-conic-gradient(var(--check) 0 25%, transparent 0 50%) 0 0/8px 8px}
+.card.is-done{opacity:.72}
+@media (prefers-reduced-motion:no-preference){
+  .card.is-yellow.live::before{animation:watch 3.4s ease-in-out infinite}
+}
+@keyframes watch{0%,100%{opacity:1}50%{opacity:.45}}
+
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.card h3{font-family:'Anton',sans-serif;font-weight:400;font-size:24px;
+  line-height:1.02;letter-spacing:.012em;text-transform:uppercase;color:var(--lights)}
+.state{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;padding-top:5px;white-space:nowrap;color:var(--dim)}
+.is-green .state{color:var(--green)}
+.is-yellow .state{color:var(--yellow)}
+.is-done .state{color:var(--check)}
+.bill{font-size:13.5px;color:var(--dust);margin-top:7px}
+.why{font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;
+  color:var(--dim);margin-top:8px}
+
+.times{display:flex;gap:22px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.t .v{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;
+  color:var(--lights);line-height:1.1;letter-spacing:-.01em}
+.t.key .v{color:var(--yellow)}
+.t .v .est{color:var(--dim);font-weight:400}
+.t .k{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--dim);margin-top:4px}
+
+.row{display:flex;align-items:center;gap:14px;padding:14px 2px;
+  border-bottom:1px solid var(--line)}
+.row .when{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dim);width:50px;flex-shrink:0}
+.row .who{flex:1;min-width:0}
+.row .who .n{font-family:'Anton',sans-serif;font-size:15px;letter-spacing:.03em;
+  text-transform:uppercase;color:var(--lights);line-height:1.2}
+.row .who .s{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--dim);
+  margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trend{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.trend svg{display:block;overflow:visible}
+.trend .pct{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;
+  color:var(--dust);width:50px;text-align:right;letter-spacing:-.01em}
+.trend .pct .ar{font-size:11px}
+.trend .pct.up{color:var(--yellow)}
+.trend .pct.down{color:var(--dim)}
+
+.toggle{display:flex;gap:6px;margin:0 2px 2px}
+.toggle button{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);background:none;
+  border:1px solid var(--line);border-radius:2px;padding:6px 11px;cursor:pointer;
+  transition:color .15s,border-color .15s}
+.toggle button:hover{color:var(--dust)}
+.toggle button[aria-pressed="true"]{color:var(--track);background:var(--dust);border-color:var(--dust)}
+.toggle button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+
+.grouphead{font-family:'Anton',sans-serif;font-size:12.5px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--dim);margin:20px 2px 2px;
+  padding-bottom:7px;border-bottom:1px solid var(--line)}
+.srow{display:flex;align-items:baseline;gap:13px;padding:11px 2px;
+  border-bottom:1px solid var(--line)}
+.srow .dt{font-family:'DM Mono',monospace;font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);width:56px;flex-shrink:0}
+.srow .ev{flex:1;font-size:13.5px;color:var(--dust);min-width:0}
+.srow .ev .tk{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.srow.off{opacity:.45}
+.srow .badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--dim);border:1px solid var(--line);
+  border-radius:2px;padding:2px 5px;flex-shrink:0;white-space:nowrap}
+
+.msg{font-family:'DM Mono',monospace;font-size:12px;color:var(--dim);
+  padding:22px 2px;line-height:1.6}
+.foot{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;
+  color:var(--dim);margin-top:32px;padding-top:16px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wordmark">Dirt<span>Call</span></div>
+  <div class="today" id="today"></div>
+</header>
+
+<main id="app"><div class="msg">Loading…</div></main>
+
+<p class="foot" id="foot"></p>
+
+<script>
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const parse = (iso) => new Date(iso + "T12:00:00");
+const fmtDay = (iso) => { const d = parse(iso); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONS[d.getMonth()]}`; };
+const fmtShort = (iso) => { const d = parse(iso); return `${MONS[d.getMonth()]} ${d.getDate()}`; };
+const shift = (iso, n) => { const d = parse(iso); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };
+
+function clock(hhmm){
+  if(!hhmm) return "—";
+  let [h,m] = hhmm.split(":").map(Number);
+  const h12 = h % 12 || 12;
+  return m ? `${h12}:${String(m).padStart(2,"0")}` : `${h12}:00`;
+}
+
+function sparkline(vals){
+  if(!vals || vals.length < 2) return "";
+  const w = 46, h = 18, lo = Math.min(...vals), hi = Math.max(...vals);
+  const span = Math.max(hi - lo, 1);
+  const pts = vals.map((v,i)=>{
+    const x = (i/(vals.length-1))*w;
+    const y = h - 2 - ((v-lo)/span)*(h-4);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = pts[pts.length-1].split(",");
+  const rising = vals[vals.length-1] - vals[0] >= 10;
+  const c = rising ? "#F2BE17" : "#7C6E62";
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <polyline points="${pts.join(" ")}" fill="none" stroke="${c}" stroke-width="1.5"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="2.4" fill="${c}"/></svg>`;
+}
+
+const STATE = { green:"Green", yellow:"Yellow", red:"Red" };
+const BADGE = { practice:"Practice", dark:"Dark", raindate:"Rain date", offtrack:"Off track" };
+
+function card(ev, tracks, st, today){
+  const t = tracks[ev.track], times = ev.times || {}, src = ev.timeSource || {};
+  const past = ev.date < today;
+  const live = ev.date === today || ev.date === shift(today,1);
+
+  let cls, label;
+  if (ev.type === "dark")        { cls = "is-none"; label = "Dark"; }
+  else if (past)                 { cls = "is-done"; label = "Checkered"; }
+  else if (st && st.flag)        { cls = "is-" + st.flag; label = STATE[st.flag]; }
+  else                           { cls = "is-none"; label = ev.type === "practice" ? "Practice" : "No reading"; }
+
+  const time = (k, key) => {
+    if (!times[k]) return "";
+    const est = src[k] === "estimated" ? `<span class="est">~</span>` : "";
+    return `<div class="t${key?" key":""}"><div class="v">${est}${clock(times[k])}</div>
+      <div class="k">${k === "hotlaps" ? "Hot laps" : k === "race" ? "Racing" : k[0].toUpperCase()+k.slice(1)}</div></div>`;
+  };
+
+  const rows = [time("pits"), time("gates"), time("hotlaps", true), time("race")].join("");
+
+  return `<article class="card ${cls}${live && !past ? " live" : ""}">
+    <div class="head"><h3>${t.short.replace("-","\u2011")}</h3><div class="state">${label}</div></div>
+    <div class="bill">${ev.title}</div>
+    ${st && st.why && !past ? `<div class="why">${st.why}</div>` : ""}
+    ${rows ? `<div class="times">${rows}</div>` : ""}
+  </article>`;
+}
+
+function nextRow(ev, tracks, st){
+  const t = tracks[ev.track];
+  let trendHTML = "", pctHTML = "";
+  if (st) {
+    trendHTML = sparkline(st.trend);
+    const arrow = st.direction === "up" ? "&#8593;" : st.direction === "down" ? "&#8595;" : "";
+    pctHTML = `<div class="pct ${st.direction}">${st.prob}%<span class="ar">${arrow}</span></div>`;
+  } else {
+    pctHTML = `<div class="pct">—</div>`;
+  }
+  return `<div class="row">
+    <div class="when">${DAYS[parse(ev.date).getDay()]} ${parse(ev.date).getDate()}</div>
+    <div class="who"><div class="n">${t.short.replace("-","\u2011")}</div>
+      <div class="s">${ev.title}</div></div>
+    <div class="trend">${trendHTML}${pctHTML}</div>
+  </div>`;
+}
+
+function seasonRow(ev, tracks, showTrack){
+  const badge = BADGE[ev.type];
+  return `<div class="srow${badge ? " off" : ""}">
+    <div class="dt">${fmtShort(ev.date)}</div>
+    <div class="ev">${showTrack ? `<span class="tk">${tracks[ev.track].short}</span>` : ""}${ev.title}</div>
+    ${badge ? `<div class="badge">${badge}</div>` : ""}
+  </div>`;
+}
+
+(async function(){
+  const app = document.getElementById("app");
+  const bust = "?v=" + Date.now();
+  let data, status;
+  try {
+    [data, status] = await Promise.all([
+      fetch("data/events.json" + bust).then(r => r.json()),
+      fetch("data/status.json" + bust).then(r => r.ok ? r.json() : { events:{} }).catch(() => ({ events:{} }))
+    ]);
+  } catch (err) {
+    app.innerHTML = `<div class="msg">Couldn't load the schedule.<br>${err.message}</div>`;
+    return;
+  }
+
+  const tracks = data.tracks;
+  const st = status.events || {};
+  const today = new Date().toLocaleDateString("en-CA");
+  document.getElementById("today").textContent = fmtDay(today);
+
+  // Week runs through the coming Sunday. Two days of finished races stay
+  // visible so Friday's result is still there on Saturday.
+  const dow = parse(today).getDay();
+  const endOfWeek = shift(today, dow === 0 ? 0 : 7 - dow);
+  const startWindow = shift(today, -2);
+  const endNextWeek = shift(endOfWeek, 7);
+
+  const thisWeek = data.events.filter(e => e.date >= startWindow && e.date <= endOfWeek);
+  const nextWeek = data.events.filter(e => e.date > endOfWeek && e.date <= endNextWeek
+                                            && e.type !== "offtrack");
+  const rest     = data.events.filter(e => e.date > endNextWeek);
+
+  let html = `<div class="eyebrow"><h2>This week</h2><span class="rule"></span>
+    <span class="note">${status.generated
+      ? new Date(status.generated).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}).toLowerCase()
+      : "no reading"}</span></div>`;
+
+  if (!thisWeek.length) {
+    html += `<div class="msg">Nothing on this week.</div>`;
+  } else {
+    let lastDate = null;
+    for (const ev of thisWeek) {
+      if (ev.date !== lastDate) {
+        const tag = ev.date === today ? `<span class="tag">Tonight</span>` : "";
+        html += `<div class="daymark"><span class="d">${fmtDay(ev.date)}</span>${tag}</div>`;
+        lastDate = ev.date;
+      }
+      html += card(ev, tracks, st[`${ev.date}|${ev.track}`], today);
+    }
+  }
+
+  html += `<div class="eyebrow"><h2>Next week</h2><span class="rule"></span>
+    <span class="note">forecast only</span></div>`;
+  html += nextWeek.length
+    ? nextWeek.map(e => nextRow(e, tracks, st[`${e.date}|${e.track}`])).join("")
+    : `<div class="msg">Nothing scheduled.</div>`;
+
+  html += `<div class="eyebrow"><h2>Rest of season</h2><span class="rule"></span>
+    <span class="note">${rest.length} dates</span></div>`;
+  if (rest.length) {
+    html += `<div class="toggle">
+      <button id="btn-date" aria-pressed="true">By date</button>
+      <button id="btn-track" aria-pressed="false">By track</button></div><div id="season"></div>`;
+  } else {
+    html += `<div class="msg">That's the season.</div>`;
+  }
+
+  app.innerHTML = html;
+  document.getElementById("foot").innerHTML =
+    `Times from the ${data.season} schedule. ~ = estimated, not published.<br>` +
+    `Flags cover today and tomorrow only. Cancellations aren't detected.`;
+
+  if (!rest.length) return;
+  const season = document.getElementById("season");
+  const bDate = document.getElementById("btn-date");
+  const bTrack = document.getElementById("btn-track");
+
+  function setMode(byTrack){
+    bDate.setAttribute("aria-pressed", String(!byTrack));
+    bTrack.setAttribute("aria-pressed", String(byTrack));
+    season.innerHTML = byTrack
+      ? Object.keys(tracks).map(code => {
+          const r = rest.filter(e => e.track === code);
+          return r.length
+            ? `<div class="grouphead">${tracks[code].short} &middot; ${r.length} left</div>` +
+              r.map(e => seasonRow(e, tracks, false)).join("")
+            : "";
+        }).join("")
+      : rest.map(e => seasonRow(e, tracks, true)).join("");
+  }
+  bDate.addEventListener("click", () => setMode(false));
+  bTrack.addEventListener("click", () => setMode(true));
+  setMode(false);
+})();
+</script>
+</body>
+</html>
