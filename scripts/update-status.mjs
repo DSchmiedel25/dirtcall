@@ -27,6 +27,10 @@ const TREND_KEEP = 6;         // readings retained per event
 
 const NTFY_TOPIC = process.env.NTFY_TOPIC;
 
+// The 2pm pass always sends a roll-up of tonight's tracks, change or not.
+// Every other pass is silent unless a flag actually moved.
+const SUMMARY = process.env.SUMMARY === "true";
+
 // ---- helpers -------------------------------------------------------------
 const key = (e) => `${e.date}|${e.track}`;
 const mins = (hhmm) => {
@@ -184,6 +188,7 @@ async function notify(title, message, priority = "default") {
 // ---- main ----------------------------------------------------------------
 console.log("cwd:", process.cwd());
 console.log("NTFY_TOPIC:", NTFY_TOPIC ? `set (${NTFY_TOPIC.length} chars)` : "NOT SET");
+console.log("mode:", SUMMARY ? "summary pass" : "change-only pass");
 console.log("node:", process.version);
 
 let data;
@@ -279,6 +284,31 @@ await writeFile("data/status.json", JSON.stringify(status, null, 2));
 await writeFile("data/trend.json", JSON.stringify(trend, null, 2));
 
 for (const a of alerts) await notify(a.title, a.body, a.priority);
+
+// Daily roll-up. Only on race days — a Tuesday with nothing on stays quiet.
+if (SUMMARY) {
+  const tonight = upcoming.filter((e) => e.date === today);
+  if (!tonight.length) {
+    console.log("summary: nothing racing today, staying quiet");
+  } else {
+    const lines = tonight.map((e) => {
+      const s = status.events[key(e)];
+      const name = data.tracks[e.track].short;
+      const t = e.times || {};
+      const when = t.hotlaps ? ` (hot laps ${pretty(t.hotlaps)})` : "";
+      if (!s || !s.flag) return `${name}: no reading${when}`;
+      return `${name}: ${s.flag.toUpperCase()}${when}\n${s.why}`;
+    });
+    const flags = tonight
+      .map((e) => status.events[key(e)]?.flag)
+      .filter(Boolean);
+    const headline = flags.includes("yellow") ? "watch it" : "all green";
+    await notify(
+      `Tonight: ${tonight.length} track${tonight.length > 1 ? "s" : ""}, ${headline}`,
+      lines.join("\n\n")
+    );
+  }
+}
 
 const flagged = Object.values(status.events).filter((s) => s.flag);
 console.log(
