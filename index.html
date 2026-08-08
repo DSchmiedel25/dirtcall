@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DirtCall">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -167,7 +170,7 @@ a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 <p class="foot" id="foot"></p>
 
 <script>
-const VERSION = "v1.11";
+const VERSION = "v1.13";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -210,8 +213,12 @@ function card(ev, tracks, st, wx, today){
   const live = ev.date === today || ev.date === shift(today,1);
 
   let cls, label;
+  // A hand-entered result always wins over anything inferred.
+  const washed = !ev.result && past && wx && wx.during >= WASHOUT_IN;
+
   if (ev.type === "dark")        { cls = "is-none"; label = "Dark"; }
   else if (ev.result === "rainout") { cls = "is-red is-done"; label = "Rained out"; }
+  else if (washed)               { cls = "is-red is-done"; label = "Likely washed out"; }
   else if (past)                 { cls = "is-done"; label = "Checkered"; }
   else if (wx)                   { cls = "is-" + wx.flag; label = STATE[wx.flag]; }
   else if (st && st.flag)        { cls = "is-" + st.flag; label = STATE[st.flag]; }
@@ -236,7 +243,8 @@ function card(ev, tracks, st, wx, today){
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
     <div class="head"><h3>${t.short.replace("-","\u2011")}</h3><div class="state">${label}</div></div>
     <div class="bill">${ev.title}</div>
-    ${wxRow && wx.why ? `<div class="why">${wx.why}</div>` : ""}
+    ${washed ? `<div class="why">${inches(wx.during)} fell during the show</div>`
+             : wxRow && wx.why ? `<div class="why">${wx.why}</div>` : ""}
     ${rows ? `<div class="times">${rows}</div>` : ""}
     ${wxRow}
     ${wxRow ? `<div class="quip">${quipFor(ev, wx)}</div>` : ""}
@@ -279,6 +287,9 @@ const ANTECEDENT_HOURS = 8;
 const ANTECEDENT_IN = 0.20;  // rain already down before gates
 const RACE_IN       = 0.04;  // rain forecast during the show
 const RACE_PROB     = 50;
+// Observed rain during the show that makes a completed race unlikely to
+// have actually run. Only ever applied backwards, against measured data.
+const WASHOUT_IN    = 0.25;
 const FEATURE_HOURS = 3;
 const inches = (n) => n.toFixed(2) + '"';
 
@@ -290,7 +301,7 @@ async function fetchWeather(tracks){
     `?latitude=${lat}&longitude=${lon}` +
     "&hourly=precipitation,precipitation_probability,temperature_2m," +
     "cloud_cover,wind_speed_10m,wind_gusts_10m,weather_code" +
-    "&past_days=1&forecast_days=16" +
+    "&past_days=3&forecast_days=16" +
     "&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph" +
     "&timezone=America%2FNew_York";
   const res = await fetch(url);
