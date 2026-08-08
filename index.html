@@ -76,9 +76,19 @@ body{
 .is-done .state{color:var(--check)}
 .bill{font-size:13.5px;color:var(--dust);margin-top:7px}
 .why{font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;
-  color:var(--dim);margin-top:8px}
+  color:var(--dim);margin-top:8px;display:inline-block;text-decoration:none;
+  border-bottom:1px solid var(--line);padding-bottom:2px}
+a.why:hover,a.why:focus-visible{color:var(--dust);border-bottom-color:var(--dim)}
+a.why:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
 
 .times{display:flex;gap:22px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.wx{display:flex;gap:22px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.wx .v{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;
+  color:var(--dust);line-height:1.1}
+.wx .v.warn{color:var(--yellow)}
+.wx .k{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--dim);margin-top:4px}
+.wx.pending .v{color:var(--dim)}
 .t .v{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;
   color:var(--lights);line-height:1.1;letter-spacing:-.01em}
 .t.key .v{color:var(--yellow)}
@@ -180,7 +190,7 @@ function sparkline(vals){
 const STATE = { green:"Green", yellow:"Yellow", red:"Red" };
 const BADGE = { practice:"Practice", dark:"Dark", raindate:"Rain date", offtrack:"Off track" };
 
-function card(ev, tracks, st, today){
+function card(ev, tracks, st, wx, today){
   const t = tracks[ev.track], times = ev.times || {}, src = ev.timeSource || {};
   const past = ev.date < today;
   const live = ev.date === today || ev.date === shift(today,1);
@@ -188,6 +198,7 @@ function card(ev, tracks, st, today){
   let cls, label;
   if (ev.type === "dark")        { cls = "is-none"; label = "Dark"; }
   else if (past)                 { cls = "is-done"; label = "Checkered"; }
+  else if (wx)                   { cls = "is-" + wx.flag; label = STATE[wx.flag]; }
   else if (st && st.flag)        { cls = "is-" + st.flag; label = STATE[st.flag]; }
   else                           { cls = "is-none"; label = ev.type === "practice" ? "Practice" : "No reading"; }
 
@@ -200,11 +211,19 @@ function card(ev, tracks, st, today){
 
   const rows = [time("pits"), time("gates"), time("hotlaps", true), time("race")].join("");
 
+  const wxRow = (!past && ev.type !== "dark" && wx) ? `<div class="wx">
+    <div><div class="v">${wx.temp === null ? "—" : Math.round(wx.temp) + "\u00B0"}</div><div class="k">At hot laps</div></div>
+    <div><div class="v${wx.prob >= 50 ? " warn" : ""}">${wx.prob}%</div><div class="k">Rain chance</div></div>
+    <div><div class="v${wx.before >= 5 ? " warn" : ""}">${wx.before} mm</div><div class="k">Before gates</div></div>
+    <div><div class="v${wx.during >= 1 ? " warn" : ""}">${wx.during} mm</div><div class="k">During show</div></div>
+  </div>` : "";
+
   return `<article class="card ${cls}${live && !past ? " live" : ""}">
     <div class="head"><h3>${t.short.replace("-","\u2011")}</h3><div class="state">${label}</div></div>
     <div class="bill">${ev.title}</div>
-    ${st && st.why && !past ? `<div class="why">${st.why}</div>` : ""}
+    ${wx && wx.why ? `<div class="why">${wx.why}</div>` : ""}
     ${rows ? `<div class="times">${rows}</div>` : ""}
+    ${wxRow}
   </article>`;
 }
 
@@ -235,6 +254,71 @@ function seasonRow(ev, tracks, showTrack){
   </div>`;
 }
 
+// ---- weather, fetched straight from Open-Meteo (no key needed) ----------
+const ANTECEDENT_HOURS = 8, ANTECEDENT_MM = 5, RACE_MM = 1, RACE_PROB = 50, FEATURE_HOURS = 3;
+
+async function fetchWeather(tracks){
+  const codes = Object.keys(tracks);
+  const lat = codes.map(c => tracks[c].lat).join(",");
+  const lon = codes.map(c => tracks[c].lon).join(",");
+  const url = "https://api.open-meteo.com/v1/forecast" +
+    `?latitude=${lat}&longitude=${lon}` +
+    "&hourly=precipitation,precipitation_probability,temperature_2m" +
+    "&past_days=1&forecast_days=16&temperature_unit=fahrenheit" +
+    "&timezone=America%2FNew_York";
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("Open-Meteo " + res.status);
+  const body = await res.json();
+  const list = Array.isArray(body) ? body : [body];
+  const out = {};
+  codes.forEach((code,i)=>{
+    const hh = list[i].hourly, map = new Map();
+    hh.time.forEach((t,j)=> map.set(t.slice(0,13), {
+      mm: hh.precipitation[j] ?? 0,
+      prob: hh.precipitation_probability[j] ?? 0,
+      temp: hh.temperature_2m[j] ?? null
+    }));
+    out[code] = map;
+  });
+  return out;
+}
+
+const toMin = (s) => { const [h,m] = s.split(":").map(Number); return h*60+m; };
+
+function span(map, date, from, to){
+  let mm = 0, prob = 0, temp = null, seen = 0;
+  for(let m = from; m <= to; m += 60){
+    const off = Math.floor(m/1440);
+    const hr = ((Math.floor(m/60) % 24) + 24) % 24;
+    const cell = map.get(`${shift(date,off)}T${String(hr).padStart(2,"0")}`);
+    if(!cell) continue;
+    mm += cell.mm; prob = Math.max(prob, cell.prob);
+    if(temp === null) temp = cell.temp;
+    seen++;
+  }
+  return { mm: Math.round(mm*10)/10, prob, temp, seen };
+}
+
+function readWeather(ev, map){
+  const t = ev.times || {};
+  if(!map || !t.gates || !t.race) return null;
+  const gates = toMin(t.gates), anchor = toMin(t.hotlaps || t.race);
+  const before = span(map, ev.date, gates - ANTECEDENT_HOURS*60, gates - 60);
+  const during = span(map, ev.date, anchor, toMin(t.race) + FEATURE_HOURS*60);
+  if(!before.seen && !during.seen) return null;
+
+  const reasons = [];
+  if(before.mm >= ANTECEDENT_MM) reasons.push(`${before.mm} mm before gates`);
+  if(during.mm >= RACE_MM)       reasons.push(`${during.mm} mm during the show`);
+  if(during.prob >= RACE_PROB)   reasons.push(`${during.prob}% at ${clock(t.hotlaps || t.race)}`);
+
+  return {
+    flag: reasons.length ? "yellow" : "green",
+    why: reasons.length ? reasons.join(" \u00B7 ") : "Dry before gates, clear through the feature",
+    prob: during.prob, before: before.mm, during: during.mm, temp: during.temp
+  };
+}
+
 (async function(){
   const app = document.getElementById("app");
   const bust = "?v=" + Date.now();
@@ -251,6 +335,10 @@ function seasonRow(ev, tracks, showTrack){
 
   const tracks = data.tracks;
   const st = status.events || {};
+  let weather = null;
+  try { weather = await fetchWeather(data.tracks); }
+  catch(err){ console.warn("weather unavailable:", err.message); }
+
   const today = new Date().toLocaleDateString("en-CA");
   document.getElementById("today").textContent = fmtDay(today);
 
@@ -281,7 +369,8 @@ function seasonRow(ev, tracks, showTrack){
         html += `<div class="daymark"><span class="d">${fmtDay(ev.date)}</span>${tag}</div>`;
         lastDate = ev.date;
       }
-      html += card(ev, tracks, st[`${ev.date}|${ev.track}`], today);
+      const wx = weather ? readWeather(ev, weather[ev.track]) : null;
+      html += card(ev, tracks, st[`${ev.date}|${ev.track}`], wx, today);
     }
   }
 
