@@ -1,0 +1,69 @@
+{
+  "generated": "2026-08-08T17:23:47.367Z",
+  "today": "2026-08-08",
+  "events": {
+    "2026-08-08|FON": {
+      "flag": "green",
+      "why": "Dry all day · 37% through the feature",
+      "prob": 37,
+      "trend": [
+        37
+      ],
+      "direction": "flat"
+    },
+    "2026-08-08|LV": {
+      "flag": "yellow",
+      "why": "0.43\" once you're there · 52% at 6pm",
+      "prob": 52,
+      "trend": [
+        52
+      ],
+      "direction": "flat"
+    },
+    "2026-08-14|AS": {
+      "flag": null,
+      "why": null,
+      "prob": 7,
+      "trend": [
+        7
+      ],
+      "direction": "flat"
+    },
+    "2026-08-15|FON": {
+      "flag": null,
+      "why": null,
+      "prob": 7,
+      "trend": [
+        7
+      ],
+      "direction": "flat"
+    },
+    "2026-08-15|LV": {
+      "flag": null,
+      "why": null,
+      "prob": 7,
+      "trend": [
+        7
+      ],
+      "direction": "flat"
+    },
+    "2026-08-21|AS": {
+      "flag": null,
+      "why": null,
+      "prob": 45,
+      "trend": [
+        45
+      ],
+      "direction": "flat"
+    },
+    "2026-08-22|LV": {
+      "flag": null,
+      "why": null,
+      "prob": 29,
+      "trend": [
+        29
+      ],
+      "direction": "flat"
+    }
+  }
+}
