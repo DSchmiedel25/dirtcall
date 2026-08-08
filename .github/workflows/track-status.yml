@@ -1,1 +1,38 @@
+name: Track status
 
+# Daily, not Fri/Sat — the schedule has races on Tuesdays (Mr. Dirt Track USA,
+# Eve of Destruction), Wednesdays (Firecracker 50) and Thursdays, and a daily
+# run is also what builds the trend history for next week's numbers.
+#
+# 18:00 UTC = 2pm EDT. Racing season is entirely EDT so this lands right
+# April through October; the January and March dates will read 1pm EST.
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Read forecast and write status
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: node scripts/update-status.mjs
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "dirtcall-bot"
+          git config user.email "actions@github.com"
+          git add data/status.json data/trend.json
+          git diff --staged --quiet || git commit -m "status: $(date -u +%Y-%m-%d)"
+          git push
