@@ -185,6 +185,93 @@ async function notify(title, message, priority = "default") {
   }
 }
 
+
+// ---- official status from MyRacePass ------------------------------------
+// Each track has an MRP schedule page that carries the promoter's own status:
+// "Rain Out", "Live Now", "Results", "Lineups", "Tickets", "Details".
+// This is the track's word, not an inference from rainfall, so it outranks
+// anything the forecast says.
+//
+// Deliberately parses TEXT, not markup: tags are stripped first and the
+// status is found by keyword near each long-form date. A redesign that
+// changes classes but keeps the words still works. If a page can't be
+// parsed, the entry is simply absent and the forecast carries the card.
+
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+
+const STATUS_WORDS = [
+  [/rain\s*out/i,   "rainout"],
+  [/cancell?ed/i,    "cancelled"],
+  [/postponed/i,     "postponed"],
+  [/live\s*now/i,   "live"],
+  [/\bresults\b/i, "ran"],
+  [/\blineups\b/i, "ran"],
+];
+
+function stripTags(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&nbsp;/g, " ")
+    .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ");
+}
+
+/** Pull { "YYYY-MM-DD": status } out of one track's schedule page. */
+function parseSchedule(html, year) {
+  const text = stripTags(html);
+  const dateRe = new RegExp(
+    `(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,\\s+(${MONTHS.join("|")})\\s+(\\d{1,2}),\\s+(\\d{4})`,
+    "gi"
+  );
+
+  const hits = [];
+  let m;
+  while ((m = dateRe.exec(text)) !== null) {
+    hits.push({ index: m.index, end: m.index + m[0].length, month: m[1], day: +m[2], year: +m[3] });
+  }
+
+  const out = {};
+  hits.forEach((h, i) => {
+    if (h.year !== year) return;
+    // Look only as far as the next dated block, so a status can't bleed across.
+    const slice = text.slice(h.end, i + 1 < hits.length ? hits[i + 1].index : h.end + 900);
+    for (const [re, status] of STATUS_WORDS) {
+      if (re.test(slice)) {
+        const mi = MONTHS.findIndex((x) => x.toLowerCase() === h.month.toLowerCase());
+        const iso = `${h.year}-${String(mi + 1).padStart(2, "0")}-${String(h.day).padStart(2, "0")}`;
+        // First match wins, and the list is ordered by how much it matters.
+        if (!out[iso]) out[iso] = status;
+        break;
+      }
+    }
+  });
+  return out;
+}
+
+async function fetchOfficial(tracks, year) {
+  const out = {};
+  for (const [code, t] of Object.entries(tracks)) {
+    if (!t.mrp) continue;
+    const url = `https://www.myracepass.com/tracks/${t.mrp}/schedule?year=${year}`;
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "DirtCall/1.0 (personal race schedule tool)" },
+      });
+      if (!res.ok) { console.error(`  ${code}: MRP ${res.status}`); continue; }
+      const found = parseSchedule(await res.text(), year);
+      for (const [date, status] of Object.entries(found)) out[`${date}|${code}`] = status;
+      console.log(`  ${code}: ${Object.keys(found).length} dated statuses`);
+    } catch (err) {
+      console.error(`  ${code}: ${err.message}`);
+    }
+    await new Promise((r) => setTimeout(r, 800));   // be polite
+  }
+  return out;
+}
+
 // ---- main ----------------------------------------------------------------
 console.log("cwd:", process.cwd());
 console.log("NTFY_TOPIC:", NTFY_TOPIC ? `set (${NTFY_TOPIC.length} chars)` : "NOT SET");
@@ -235,7 +322,11 @@ try {
   process.exit(1);
 }
 
-const status = { generated: new Date().toISOString(), today, events: {} };
+// The promoter's own word, where we can get it.
+console.log("Checking MyRacePass...");
+const official = await fetchOfficial(data.tracks, Number(today.slice(0, 4)));
+
+const status = { generated: new Date().toISOString(), today, official, events: {} };
 const alerts = [];
 
 for (const e of upcoming) {
@@ -256,17 +347,33 @@ for (const e of upcoming) {
   // not a claim about whether racing happens.
   const near = e.date <= addDays(today, 1);
 
+  const said = official[k] || null;
+
   status.events[k] = {
     flag: near ? read.flag : null,
     why: near ? read.why : null,
+    official: said,
     prob: read.prob,
     trend: trend[k].map((r) => r.prob),
     direction,
   };
 
+  // A track calling it off outranks anything the forecast says. Alert the
+  // first time we see it, for anything today or tomorrow.
+  const saidBefore = prev.events?.[k]?.official ?? null;
+  if (near && said !== saidBefore && ["rainout", "cancelled", "postponed"].includes(said)) {
+    const name = data.tracks[e.track].short;
+    alerts.push({
+      title: `${name}: ${said.toUpperCase()}`,
+      body: `${e.title}\n\nThe track posted this \u2014 not a forecast.`,
+      priority: "high",
+    });
+  }
+
   // Notify only on a change, and only for near events.
   const was = prev.events?.[k]?.flag ?? null;
-  if (near && was && was !== read.flag) {
+  const called = ["rainout", "cancelled", "postponed"].includes(said);
+  if (near && was && was !== read.flag && !called) {
     const name = data.tracks[e.track].short;
     if (read.flag === "yellow") {
       alerts.push({
@@ -296,13 +403,19 @@ if (SUMMARY) {
       const name = data.tracks[e.track].short;
       const t = e.times || {};
       const when = t.hotlaps ? ` (hot laps ${pretty(t.hotlaps)})` : "";
+      if (s && ["rainout","cancelled","postponed"].includes(s.official))
+        return `${name}: ${s.official.toUpperCase()} \u2014 posted by the track`;
       if (!s || !s.flag) return `${name}: no reading${when}`;
-      return `${name}: ${s.flag.toUpperCase()}${when}\n${s.why}`;
+      const live = s.official === "live" ? " \u00b7 racing now" : "";
+      return `${name}: ${s.flag.toUpperCase()}${when}${live}\n${s.why}`;
     });
     const flags = tonight
       .map((e) => status.events[key(e)]?.flag)
       .filter(Boolean);
-    const headline = flags.includes("yellow") ? "watch it" : "all green";
+    const calls = tonight.map((e) => status.events[key(e)]?.official);
+    const headline = calls.some((c) => ["rainout","cancelled","postponed"].includes(c))
+      ? "one is out"
+      : flags.includes("yellow") ? "watch it" : "all green";
     await notify(
       `Tonight: ${tonight.length} track${tonight.length > 1 ? "s" : ""}, ${headline}`,
       lines.join("\n\n")
