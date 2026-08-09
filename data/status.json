@@ -1,18 +1,94 @@
 {
-  "generated": "2026-08-09T14:07:54.777Z",
+  "generated": "2026-08-09T16:03:36.389Z",
   "today": "2026-08-09",
-  "official": {},
+  "official": {
+    "2026-04-10|AS": "ran",
+    "2026-04-17|AS": "ran",
+    "2026-04-24|AS": "ran",
+    "2026-05-01|AS": "ran",
+    "2026-05-08|AS": "ran",
+    "2026-05-15|AS": "rainout",
+    "2026-05-22|AS": "ran",
+    "2026-05-29|AS": "ran",
+    "2026-06-05|AS": "ran",
+    "2026-06-12|AS": "ran",
+    "2026-06-19|AS": "ran",
+    "2026-06-26|AS": "ran",
+    "2026-07-03|AS": "ran",
+    "2026-07-10|AS": "ran",
+    "2026-07-17|AS": "ran",
+    "2026-07-24|AS": "ran",
+    "2026-07-31|AS": "rainout",
+    "2026-08-07|AS": "rainout",
+    "2026-04-04|LV": "ran",
+    "2026-04-11|LV": "ran",
+    "2026-04-18|LV": "ran",
+    "2026-04-25|LV": "rainout",
+    "2026-05-02|LV": "rainout",
+    "2026-05-09|LV": "rainout",
+    "2026-05-16|LV": "ran",
+    "2026-05-20|LV": "ran",
+    "2026-05-21|LV": "ran",
+    "2026-05-23|LV": "rainout",
+    "2026-05-30|LV": "ran",
+    "2026-06-06|LV": "ran",
+    "2026-06-13|LV": "ran",
+    "2026-06-16|LV": "ran",
+    "2026-06-20|LV": "ran",
+    "2026-06-27|LV": "ran",
+    "2026-07-04|LV": "ran",
+    "2026-07-11|LV": "ran",
+    "2026-07-25|LV": "ran",
+    "2026-04-11|FON": "ran",
+    "2026-04-18|FON": "ran",
+    "2026-04-25|FON": "cancelled",
+    "2026-05-02|FON": "ran",
+    "2026-05-09|FON": "rainout",
+    "2026-05-16|FON": "ran",
+    "2026-05-23|FON": "rainout",
+    "2026-05-30|FON": "ran",
+    "2026-06-06|FON": "ran",
+    "2026-06-13|FON": "ran",
+    "2026-06-20|FON": "ran",
+    "2026-06-27|FON": "ran",
+    "2026-07-01|FON": "ran",
+    "2026-07-11|FON": "ran",
+    "2026-07-16|FON": "ran",
+    "2026-07-18|FON": "rainout",
+    "2026-07-25|FON": "ran",
+    "2026-08-01|FON": "ran",
+    "2026-08-08|FON": "ran"
+  },
   "discovered": {},
-  "published": {},
+  "published": {
+    "2026-08-14|AS": {
+      "pits": "16:00",
+      "gates": "17:00",
+      "hotlaps": "18:00",
+      "race": "19:00"
+    },
+    "2026-08-15|LV": {
+      "pits": "14:00",
+      "gates": "17:00",
+      "hotlaps": "17:00",
+      "race": "18:00"
+    },
+    "2026-08-15|FON": {
+      "pits": "16:00",
+      "gates": "16:00",
+      "hotlaps": "18:00",
+      "race": "19:00"
+    }
+  },
   "events": {
     "2026-08-14|AS": {
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 7,
+      "prob": 4,
       "trend": [
         5,
-        7
+        4
       ],
       "direction": "flat"
     },
@@ -20,10 +96,10 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 6,
+      "prob": 7,
       "trend": [
         4,
-        6
+        7
       ],
       "direction": "flat"
     },
@@ -31,10 +107,10 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 5,
+      "prob": 9,
       "trend": [
         5,
-        5
+        9
       ],
       "direction": "flat"
     },
