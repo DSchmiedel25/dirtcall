@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-09T22:03:43.753Z",
-  "today": "2026-08-09",
+  "generated": "2026-08-10T15:32:44.458Z",
+  "today": "2026-08-10",
   "official": {
     "2026-04-10|AS": "ran",
     "2026-04-17|AS": "ran",
@@ -62,7 +62,7 @@
   "discovered": {},
   "published": {
     "2026-08-14|AS": {
-      "pits": "16:00",
+      "pits": "15:00",
       "gates": "17:00",
       "hotlaps": "18:00",
       "race": "19:00"
@@ -85,10 +85,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 3,
+      "prob": 4,
       "trend": [
         5,
-        3
+        3,
+        4
       ],
       "direction": "flat"
     },
@@ -96,10 +97,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 4,
+      "prob": 6,
       "trend": [
         4,
-        4
+        4,
+        6
       ],
       "direction": "flat"
     },
@@ -107,10 +109,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 4,
+      "prob": 6,
       "trend": [
         5,
-        4
+        4,
+        6
       ],
       "direction": "flat"
     },
@@ -118,10 +121,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 23,
+      "prob": 19,
       "trend": [
         27,
-        23
+        23,
+        19
       ],
       "direction": "flat"
     },
@@ -129,10 +133,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 32,
+      "prob": 34,
       "trend": [
         27,
-        32
+        32,
+        34
       ],
       "direction": "flat"
     }
