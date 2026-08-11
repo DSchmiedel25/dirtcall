@@ -1,5 +1,5 @@
 /**
- * DirtCall — daily status pass
+ * DirtCheck — daily status pass
  *
  * One Open-Meteo request covers all three tracks. Writes data/status.json
  * (what the page reads) and data/trend.json (a short history of readings so
@@ -319,7 +319,7 @@ async function fetchOfficial(tracks, year) {
     const url = `https://www.myracepass.com/tracks/${t.mrp}/schedule?year=${year}`;
     try {
       const res = await fetch(url, {
-        headers: { "User-Agent": "DirtCall/1.0 (personal race schedule tool)" },
+        headers: { "User-Agent": "DirtCheck/1.0 (personal race schedule tool)" },
       });
       if (!res.ok) { console.error(`  ${code}: MRP ${res.status}`); continue; }
       const html = await res.text();
