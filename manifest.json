@@ -1,6 +1,6 @@
 {
-  "name": "DirtCall",
-  "short_name": "DirtCall",
+  "name": "DirtCheck",
+  "short_name": "DirtCheck",
   "description": "Rainout and flag status for Albany-Saratoga, Fonda and Lebanon Valley",
   "start_url": "./",
   "scope": "./",
