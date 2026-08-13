@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-13T13:22:29.312Z",
+  "generated": "2026-08-13T15:02:37.245Z",
   "today": "2026-08-13",
   "official": {
     "2026-04-10|AS": "ran",
@@ -82,8 +82,8 @@
   },
   "events": {
     "2026-08-14|AS": {
-      "flag": "yellow",
-      "why": "0.2\" once you're there",
+      "flag": "green",
+      "why": "Dry all day · 23% through the feature",
       "official": null,
       "prob": 23,
       "trend": [
