@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-13T18:58:49.651Z",
+  "generated": "2026-08-13T19:55:28.301Z",
   "today": "2026-08-13",
   "official": {},
   "discovered": {},
@@ -7,16 +7,16 @@
   "events": {
     "2026-08-14|AS": {
       "flag": "green",
-      "why": "Dry all day · 7% through the feature",
+      "why": "Dry all day · 10% through the feature",
       "official": null,
-      "prob": 7,
+      "prob": 10,
       "trend": [
         5,
         3,
         8,
         26,
         5,
-        7
+        10
       ],
       "direction": "flat"
     },
