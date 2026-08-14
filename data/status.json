@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-13T21:44:28.229Z",
-  "today": "2026-08-13",
+  "generated": "2026-08-14T13:16:28.589Z",
+  "today": "2026-08-14",
   "official": {
     "2026-04-10|AS": "ran",
     "2026-04-17|AS": "ran",
@@ -83,46 +83,46 @@
   "events": {
     "2026-08-14|AS": {
       "flag": "green",
-      "why": "Dry all day · 17% through the feature",
+      "why": "Dry all day · 36% through the feature",
       "official": null,
-      "prob": 17,
+      "prob": 36,
       "trend": [
-        5,
         3,
         8,
         26,
         5,
-        17
+        17,
+        36
       ],
       "direction": "up"
     },
     "2026-08-15|FON": {
-      "flag": null,
-      "why": null,
+      "flag": "green",
+      "why": "Dry all day · 0% through the feature",
       "official": null,
       "prob": 0,
       "trend": [
         4,
         4,
-        4,
         1,
         2,
+        0,
         0
       ],
       "direction": "flat"
     },
     "2026-08-15|LV": {
-      "flag": null,
-      "why": null,
+      "flag": "green",
+      "why": "Dry all day · 1% through the feature",
       "official": null,
-      "prob": 0,
+      "prob": 1,
       "trend": [
-        5,
         4,
         3,
         1,
         2,
-        0
+        0,
+        1
       ],
       "direction": "flat"
     },
@@ -130,14 +130,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 16,
+      "prob": 13,
       "trend": [
-        27,
         23,
         26,
         20,
         18,
-        16
+        16,
+        13
       ],
       "direction": "down"
     },
@@ -145,16 +145,16 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 21,
+      "prob": 20,
       "trend": [
-        27,
         32,
         32,
         19,
         18,
-        21
+        21,
+        20
       ],
-      "direction": "flat"
+      "direction": "down"
     },
     "2026-08-28|AS": {
       "flag": null,
@@ -162,6 +162,7 @@
       "official": null,
       "prob": 19,
       "trend": [
+        19,
         19
       ],
       "direction": "flat"
