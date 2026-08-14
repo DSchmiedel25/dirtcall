@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-14T21:24:43.078Z",
+  "generated": "2026-08-14T21:41:02.210Z",
   "today": "2026-08-14",
   "official": {
     "2026-04-10|AS": "ran",
@@ -20,6 +20,7 @@
     "2026-07-24|AS": "ran",
     "2026-07-31|AS": "rainout",
     "2026-08-07|AS": "rainout",
+    "2026-08-14|AS": "rainout",
     "2026-04-04|LV": "ran",
     "2026-04-11|LV": "ran",
     "2026-04-18|LV": "ran",
@@ -61,8 +62,8 @@
   },
   "discovered": {},
   "published": {
-    "2026-08-14|AS": {
-      "pits": "15:00",
+    "2026-08-21|AS": {
+      "pits": "16:00",
       "gates": "17:00",
       "hotlaps": "18:00",
       "race": "19:00"
@@ -84,7 +85,7 @@
     "2026-08-14|AS": {
       "flag": "green",
       "why": "Dry all day · 24% through the feature",
-      "official": null,
+      "official": "rainout",
       "prob": 24,
       "trend": [
         3,
