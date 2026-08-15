@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-15T13:34:06.357Z",
+  "generated": "2026-08-15T14:27:33.925Z",
   "today": "2026-08-15",
   "official": {
     "2026-04-10|AS": "ran",
@@ -84,31 +84,31 @@
   "events": {
     "2026-08-15|FON": {
       "flag": "green",
-      "why": "Dry all day · 3% through the feature",
+      "why": "Dry all day · 2% through the feature",
       "official": null,
-      "prob": 3,
+      "prob": 2,
       "trend": [
         4,
         1,
         2,
         0,
         0,
-        3
+        2
       ],
       "direction": "flat"
     },
     "2026-08-15|LV": {
       "flag": "green",
-      "why": "Dry all day · 1% through the feature",
+      "why": "Dry all day · 0% through the feature",
       "official": null,
-      "prob": 1,
+      "prob": 0,
       "trend": [
         3,
         1,
         2,
         0,
         0,
-        1
+        0
       ],
       "direction": "flat"
     },
