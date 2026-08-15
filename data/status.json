@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-14T21:41:02.210Z",
-  "today": "2026-08-14",
+  "generated": "2026-08-15T12:46:17.645Z",
+  "today": "2026-08-15",
   "official": {
     "2026-04-10|AS": "ran",
     "2026-04-17|AS": "ran",
@@ -82,48 +82,33 @@
     }
   },
   "events": {
-    "2026-08-14|AS": {
-      "flag": "green",
-      "why": "Dry all day · 24% through the feature",
-      "official": "rainout",
-      "prob": 24,
-      "trend": [
-        3,
-        8,
-        26,
-        5,
-        17,
-        24
-      ],
-      "direction": "up"
-    },
     "2026-08-15|FON": {
       "flag": "green",
-      "why": "Dry all day · 0% through the feature",
+      "why": "Dry all day · 3% through the feature",
       "official": null,
-      "prob": 0,
+      "prob": 3,
       "trend": [
-        4,
         4,
         1,
         2,
         0,
-        0
+        0,
+        3
       ],
       "direction": "flat"
     },
     "2026-08-15|LV": {
       "flag": "green",
-      "why": "Dry all day · 0% through the feature",
+      "why": "Dry all day · 1% through the feature",
       "official": null,
-      "prob": 0,
+      "prob": 1,
       "trend": [
-        4,
         3,
         1,
         2,
         0,
-        0
+        0,
+        1
       ],
       "direction": "flat"
     },
@@ -131,14 +116,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 11,
+      "prob": 5,
       "trend": [
-        23,
         26,
         20,
         18,
         16,
-        11
+        11,
+        5
       ],
       "direction": "down"
     },
@@ -146,14 +131,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 14,
+      "prob": 16,
       "trend": [
-        32,
         32,
         19,
         18,
         21,
-        14
+        14,
+        16
       ],
       "direction": "down"
     },
@@ -161,10 +146,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 35,
+      "prob": 29,
       "trend": [
         19,
-        35
+        35,
+        29
       ],
       "direction": "up"
     }
