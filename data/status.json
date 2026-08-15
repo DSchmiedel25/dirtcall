@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-15T18:24:04.708Z",
+  "generated": "2026-08-15T19:21:19.531Z",
   "today": "2026-08-15",
   "official": {},
   "discovered": {},
@@ -69,11 +69,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 21,
+      "prob": 25,
       "trend": [
         19,
         35,
-        21
+        25
       ],
       "direction": "flat"
     }
