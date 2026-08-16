@@ -1,51 +1,21 @@
 {
-  "generated": "2026-08-15T21:21:05.185Z",
-  "today": "2026-08-15",
+  "generated": "2026-08-16T12:48:28.195Z",
+  "today": "2026-08-16",
   "official": {},
   "discovered": {},
   "published": {},
   "events": {
-    "2026-08-15|FON": {
-      "flag": "green",
-      "why": "Dry all day · 1% through the feature",
-      "official": null,
-      "prob": 1,
-      "trend": [
-        4,
-        1,
-        2,
-        0,
-        0,
-        1
-      ],
-      "direction": "flat"
-    },
-    "2026-08-15|LV": {
-      "flag": "green",
-      "why": "Dry all day · 1% through the feature",
-      "official": null,
-      "prob": 1,
-      "trend": [
-        3,
-        1,
-        2,
-        0,
-        0,
-        1
-      ],
-      "direction": "flat"
-    },
     "2026-08-21|AS": {
       "flag": null,
       "why": null,
       "official": null,
       "prob": 5,
       "trend": [
-        26,
         20,
         18,
         16,
         11,
+        5,
         5
       ],
       "direction": "down"
@@ -54,14 +24,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 25,
+      "prob": 26,
       "trend": [
-        32,
         19,
         18,
         21,
         14,
-        25
+        25,
+        26
       ],
       "direction": "flat"
     },
@@ -69,11 +39,12 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 25,
+      "prob": 10,
       "trend": [
         19,
         35,
-        25
+        25,
+        10
       ],
       "direction": "flat"
     }
