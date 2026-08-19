@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-19T14:38:43.039Z",
+  "generated": "2026-08-19T15:36:25.939Z",
   "today": "2026-08-19",
   "official": {},
   "discovered": {},
@@ -9,44 +9,44 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 1,
+      "prob": 4,
       "trend": [
         11,
         5,
         4,
         4,
         1,
-        1
+        4
       ],
-      "direction": "down"
+      "direction": "flat"
     },
     "2026-08-22|LV": {
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 20,
+      "prob": 36,
       "trend": [
         14,
         25,
         17,
         31,
         23,
-        20
+        36
       ],
-      "direction": "flat"
+      "direction": "up"
     },
     "2026-08-28|AS": {
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 21,
+      "prob": 18,
       "trend": [
         35,
         25,
         16,
         26,
         25,
-        21
+        18
       ],
       "direction": "down"
     }
