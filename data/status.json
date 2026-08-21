@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-20T21:27:43.764Z",
-  "today": "2026-08-20",
+  "generated": "2026-08-21T12:56:57.432Z",
+  "today": "2026-08-21",
   "official": {
     "2026-04-10|AS": "ran",
     "2026-04-17|AS": "ran",
@@ -90,27 +90,27 @@
       "official": null,
       "prob": 0,
       "trend": [
-        5,
         4,
         4,
         1,
         2,
+        0,
         0
       ],
       "direction": "flat"
     },
     "2026-08-22|LV": {
-      "flag": null,
-      "why": null,
+      "flag": "yellow",
+      "why": "0.23\" once you're there",
       "official": null,
-      "prob": 20,
+      "prob": 14,
       "trend": [
-        25,
         17,
         31,
         23,
         27,
-        20
+        20,
+        14
       ],
       "direction": "flat"
     },
@@ -118,18 +118,29 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 22,
+      "prob": 31,
       "trend": [
-        25,
         16,
         26,
         25,
         27,
-        22
+        22,
+        31
+      ],
+      "direction": "up"
+    },
+    "2026-09-04|AS": {
+      "flag": null,
+      "why": null,
+      "official": null,
+      "prob": 25,
+      "trend": [
+        16,
+        25
       ],
       "direction": "flat"
     },
-    "2026-09-04|AS": {
+    "2026-09-05|LV": {
       "flag": null,
       "why": null,
       "official": null,
