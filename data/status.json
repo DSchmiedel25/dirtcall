@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-21T14:39:49.789Z",
+  "generated": "2026-08-21T15:38:00.839Z",
   "today": "2026-08-21",
   "official": {},
   "discovered": {},
@@ -24,14 +24,14 @@
       "flag": "yellow",
       "why": "0.04\" once you're there",
       "official": null,
-      "prob": 14,
+      "prob": 11,
       "trend": [
         17,
         31,
         23,
         27,
         20,
-        14
+        11
       ],
       "direction": "flat"
     },
@@ -39,14 +39,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 31,
+      "prob": 39,
       "trend": [
         16,
         26,
         25,
         27,
         22,
-        31
+        39
       ],
       "direction": "up"
     },
