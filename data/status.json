@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-21T21:24:11.654Z",
-  "today": "2026-08-21",
+  "generated": "2026-08-22T12:48:34.477Z",
+  "today": "2026-08-22",
   "official": {
     "2026-04-10|AS": "ran",
     "2026-04-17|AS": "ran",
@@ -21,6 +21,7 @@
     "2026-07-31|AS": "rainout",
     "2026-08-07|AS": "rainout",
     "2026-08-14|AS": "rainout",
+    "2026-08-21|AS": "ran",
     "2026-04-04|LV": "ran",
     "2026-04-11|LV": "ran",
     "2026-04-18|LV": "ran",
@@ -64,7 +65,7 @@
   },
   "discovered": {},
   "published": {
-    "2026-08-21|AS": {
+    "2026-08-28|AS": {
       "pits": "15:00",
       "gates": "17:00",
       "hotlaps": "18:00",
@@ -84,33 +85,18 @@
     }
   },
   "events": {
-    "2026-08-21|AS": {
-      "flag": "green",
-      "why": "Dry all day · 0% through the feature",
-      "official": null,
-      "prob": 0,
-      "trend": [
-        4,
-        4,
-        1,
-        2,
-        0,
-        0
-      ],
-      "direction": "flat"
-    },
     "2026-08-22|LV": {
       "flag": "green",
-      "why": "Dry all day · 6% through the feature",
+      "why": "Dry all day · 5% through the feature",
       "official": null,
-      "prob": 6,
+      "prob": 5,
       "trend": [
-        17,
         31,
         23,
         27,
         20,
-        6
+        6,
+        5
       ],
       "direction": "down"
     },
@@ -118,14 +104,14 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 39,
+      "prob": 49,
       "trend": [
-        16,
         26,
         25,
         27,
         22,
-        39
+        39,
+        49
       ],
       "direction": "up"
     },
@@ -133,10 +119,11 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 16,
+      "prob": 20,
       "trend": [
         16,
-        16
+        16,
+        20
       ],
       "direction": "flat"
     },
@@ -144,9 +131,10 @@
       "flag": null,
       "why": null,
       "official": null,
-      "prob": 26,
+      "prob": 29,
       "trend": [
-        26
+        26,
+        29
       ],
       "direction": "flat"
     }
